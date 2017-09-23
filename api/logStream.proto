@@ -9,7 +9,8 @@ service LogStreamer {
   rpc Log(LogRequest) returns (LogResponse) {}
 }
 
-// message is a structure that has numbered fields
+// message is the structure that get serialized
+// the numbered fields are necessary for the serialization.
 // LogRequest is the structure that gets serialized
 // and then sent to rpc server.
 message LogRequest {

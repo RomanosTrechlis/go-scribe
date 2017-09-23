@@ -63,6 +63,10 @@ func channelHandler(stop chan struct{}, s *grpc.Server) {
 }
 
 func handleIncomingRequest(req *pb.LogRequest) error {
+	if console {
+		fmt.Printf("%s/%s.log: %s\n", req.GetPath(), req.GetFilename(), req.GetLine())
+	}
+
 	var mu sync.RWMutex
 	mu.Lock()
 	defer mu.Unlock()
@@ -79,7 +83,8 @@ func writeLine(req *pb.LogRequest) error {
 		// path doesn't exist and we need to create it.
 		err = os.MkdirAll(filepath.Join(path, req.GetPath()), os.ModePerm)
 		if err != nil {
-			return fmt.Errorf("couldn't create path '%s': %v", filepath.Join(path, req.GetPath()), err)
+			return fmt.Errorf("couldn't create path '%s': %v",
+				filepath.Join(path, req.GetPath()), err)
 		}
 	}
 
@@ -91,11 +96,13 @@ func writeLine(req *pb.LogRequest) error {
 		// re create file if the old has exceeded max size
 		err = os.MkdirAll(filepath.Join(path, req.GetPath()), os.ModePerm)
 		if err != nil {
-			return fmt.Errorf("couldn't create path '%s': %v", filepath.Join(path, req.GetPath()), err)
+			return fmt.Errorf("couldn't create path '%s': %v",
+				filepath.Join(path, req.GetPath()), err)
 		}
 	}
 
-	f, err := os.OpenFile(logPath, syscall.O_CREAT|syscall.O_APPEND|syscall.O_WRONLY, os.ModePerm)
+	f, err := os.OpenFile(logPath,
+		syscall.O_CREAT|syscall.O_APPEND|syscall.O_WRONLY, os.ModePerm)
 	if err != nil {
 		return fmt.Errorf("couldn't create to path '%s': %v", logPath, err)
 	}
@@ -124,34 +131,44 @@ func printTime() string {
 }
 
 var (
+	port          int
 	stream        chan *pb.LogRequest
 	path          string
 	maxSize       int
 	countRequests int64
+	pprofInfo     bool
+	pport         int
+	console       bool
 )
 
 const (
 	layout string = time.RFC3339
 )
 
-func main() {
+func init() {
 	fmt.Printf("%s [INFO] Log streamer is starting...\n", printTime())
 	// rpc server listening port
-	port := flag.Int("port", 8080, "port for server to listen to requests")
+	flag.IntVar(&port, "port", 8080, "port for server to listen to requests")
 	// enable/disable pprof functionality
-	pprofInfo := flag.Bool("pprof", false, "additional server for pprof functionality")
+	flag.BoolVar(&pprofInfo, "pprof", false,
+		"additional server for pprof functionality")
+	// enable/disable console dumps
+	flag.BoolVar(&console, "console", false, "dumps log lines to console")
 	// pprof port for http server
-	pport := flag.Int("pport", 1111, "port for pprof server")
+	flag.IntVar(&pport, "pport", 1111, "port for pprof server")
 	// path must already exist
 	flag.StringVar(&path, "path", "../logs", "path for logs to be persisted")
 	// the size of log files before they get renamed for storing purposes.
-	flag.IntVar(&maxSize, "size", 1000000, "max size in bytes for individual files, -1 for infinite size")
+	flag.IntVar(&maxSize, "size", 1000000,
+		"max size in bytes for individual files, -1 for infinite size")
 	flag.Parse()
 
 	// prints some logo and info
 	printLogo()
-	infoBlock(*port, *pport, maxSize, path, *pprofInfo)
+	infoBlock(port, pport, maxSize, path, pprofInfo)
+}
 
+func main() {
 	countRequests = 0
 	start := time.Now()
 
@@ -178,11 +195,11 @@ func main() {
 	go channelHandler(stopRPC, s)
 
 	// rpc server
-	go server(fmt.Sprintf(":%d", *port), s)
+	go server(fmt.Sprintf(":%d", port), s)
 
 	// starts pprof server for debuging purposes.
-	if *pprofInfo {
-		go pprofServer(*pport)
+	if pprofInfo {
+		go pprofServer(pport)
 	}
 
 	// ticker for printing some information on the requests handled
@@ -194,7 +211,8 @@ func main() {
 				fmt.Printf("%s [INFO] Ticker is stopping...\n", printTime())
 				return
 			default:
-				fmt.Printf("%s [INFO] Log Streamer handled %d requests, so far.\n", printTime(), countRequests)
+				fmt.Printf("%s [INFO] Log Streamer handled %d requests, so far.\n",
+					printTime(), countRequests)
 			}
 		}
 	}()
@@ -204,6 +222,7 @@ func main() {
 	stopRPC <- struct{}{}
 	stopTicker <- struct{}{}
 	time.Sleep(1 * time.Second)
-	fmt.Printf("%s [INFO] Log streamer handled %d requests during %v\n", printTime(), countRequests, time.Since(start))
+	fmt.Printf("%s [INFO] Log streamer handled %d requests during %v\n",
+		printTime(), countRequests, time.Since(start))
 	fmt.Printf("%s [INFO] Log streamer shut down\n", printTime())
 }
