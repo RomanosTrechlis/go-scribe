@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package api;
+
+// service defines a new service names LogStreamer
+service LogStreamer {
+  // the LogStreamer service sends a LogRequest
+  // and recieves a LogResponse
+  rpc Log(LogRequest) returns (LogResponse) {}
+}
+
+// message is a structure that has numbered fields
+// LogRequest is the structure that gets serialized
+// and then sent to rpc server.
+message LogRequest {
+  string filename = 1;
+  string path = 2;
+  string line = 3;
+}
+
+// LogResponse is the reply from rpc server
+message LogResponse {
+  string res = 1;
+}
