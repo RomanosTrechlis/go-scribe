@@ -8,8 +8,6 @@ import (
 	"net"
 	"os"
 	"os/signal"
-	"path/filepath"
-	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -70,51 +68,8 @@ func handleIncomingRequest(req *pb.LogRequest) error {
 	var mu sync.RWMutex
 	mu.Lock()
 	defer mu.Unlock()
-	if err := writeLine(req); err != nil {
+	if err := writeLine(req, path, maxSize); err != nil {
 		return fmt.Errorf("failed to write line: %v", err)
-	}
-	return nil
-}
-
-func writeLine(req *pb.LogRequest) error {
-	logPath := fmt.Sprintf("%s/%s/%s.log", path, req.GetPath(), req.GetFilename())
-	info, err := os.Stat(logPath)
-	if os.IsNotExist(err) {
-		// path doesn't exist and we need to create it.
-		err = os.MkdirAll(filepath.Join(path, req.GetPath()), os.ModePerm)
-		if err != nil {
-			return fmt.Errorf("couldn't create path '%s': %v",
-				filepath.Join(path, req.GetPath()), err)
-		}
-	}
-
-	createNewFile, err := fileExceedsMaxSize(info, req)
-	if err != nil {
-		return fmt.Errorf("failed to rename file: %v", err)
-	}
-	if createNewFile {
-		// re create file if the old has exceeded max size
-		err = os.MkdirAll(filepath.Join(path, req.GetPath()), os.ModePerm)
-		if err != nil {
-			return fmt.Errorf("couldn't create path '%s': %v",
-				filepath.Join(path, req.GetPath()), err)
-		}
-	}
-
-	f, err := os.OpenFile(logPath,
-		syscall.O_CREAT|syscall.O_APPEND|syscall.O_WRONLY, os.ModePerm)
-	if err != nil {
-		return fmt.Errorf("couldn't create to path '%s': %v", logPath, err)
-	}
-	defer f.Close()
-
-	line := req.GetLine()
-	if !strings.HasSuffix(line, "\n") {
-		line += "\n"
-	}
-	_, err = f.WriteString(line)
-	if err != nil {
-		return fmt.Errorf("couldn't write line: %v", err)
 	}
 	return nil
 }
@@ -159,9 +114,16 @@ func init() {
 	// path must already exist
 	flag.StringVar(&path, "path", "../logs", "path for logs to be persisted")
 	// the size of log files before they get renamed for storing purposes.
-	flag.IntVar(&maxSize, "size", 1000000,
-		"max size in bytes for individual files, -1 for infinite size")
+	size := flag.String("size", "1MB",
+		"max size for individual files, -1B for infinite size")
 	flag.Parse()
+
+	i, err := lexicalToNumber(*size)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "couldn't parse size input to bytes: %v", err)
+		os.Exit(2)
+	}
+	maxSize = i
 
 	// prints some logo and info
 	printLogo()
