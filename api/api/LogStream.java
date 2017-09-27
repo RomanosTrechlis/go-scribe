@@ -49,6 +49,13 @@ public final class LogStream {
         getLineBytes();
   }
   /**
+   * <pre>
+   * message is the structure that get serialized
+   * the numbered fields are necessary for the serialization.
+   * LogRequest is the structure that gets serialized
+   * and then sent to rpc server.
+   * </pre>
+   *
    * Protobuf type {@code api.LogRequest}
    */
   public  static final class LogRequest extends
@@ -402,6 +409,13 @@ public final class LogStream {
       return builder;
     }
     /**
+     * <pre>
+     * message is the structure that get serialized
+     * the numbered fields are necessary for the serialization.
+     * LogRequest is the structure that gets serialized
+     * and then sent to rpc server.
+     * </pre>
+     *
      * Protobuf type {@code api.LogRequest}
      */
     public static final class Builder extends
@@ -817,6 +831,10 @@ public final class LogStream {
         getResBytes();
   }
   /**
+   * <pre>
+   * LogResponse is the reply from rpc server
+   * </pre>
+   *
    * Protobuf type {@code api.LogResponse}
    */
   public  static final class LogResponse extends
@@ -1068,6 +1086,10 @@ public final class LogStream {
       return builder;
     }
     /**
+     * <pre>
+     * LogResponse is the reply from rpc server
+     * </pre>
+     *
      * Protobuf type {@code api.LogResponse}
      */
     public static final class Builder extends

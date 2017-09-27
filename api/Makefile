@@ -2,5 +2,4 @@ go:
 	protoc --go_out=plugins=grpc:. *.proto
 
 java:
-	mkdir ../java/src/api
-	protoc --java_out ../java/src --plugin=grpc *.proto
+	protoc --grpc-java_out=. --plugin=protoc-gen-grpc=/home/romanos/GO/bin/protoc-gen-grpc-java --java_out=. *.proto
