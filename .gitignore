@@ -5,3 +5,4 @@ java/
 **/*.exe
 
 streamer/streamer
+cmd/logStreamer/logStreamer

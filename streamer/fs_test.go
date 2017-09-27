@@ -1,4 +1,4 @@
-package main
+package streamer
 
 import (
 	"os"
@@ -100,7 +100,7 @@ func TestCheckPath(t *testing.T) {
 
 	os.Create("file.txt")
 	for _, m := range tc {
-		err := checkPath(m.path)
+		err := CheckPath(m.path)
 		if m.err && err == nil {
 			t.Errorf("Expected err and got no error")
 		}

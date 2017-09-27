@@ -1,4 +1,4 @@
-package main
+package streamer
 
 import (
 	"fmt"
@@ -8,7 +8,8 @@ import (
 	"syscall"
 )
 
-func checkPath(path string) error {
+// CheckPath checks the validity of a given path
+func CheckPath(path string) error {
 	f, err := os.Open(path)
 	if err != nil {
 		return fmt.Errorf("couldn't find path: %v", err)
@@ -37,7 +38,7 @@ func fileExceedsMaxSize(info os.FileInfo, maxSize int64, rootPath, path, filenam
 	}
 
 	oldPath := fmt.Sprintf("%s/%s/%s.log", rootPath, path, filename)
-	newPath := fmt.Sprintf("%s/%s/%s_%v.log", rootPath, path, filename, printTime())
+	newPath := fmt.Sprintf("%s/%s/%s_%v.log", rootPath, path, filename, PrintTime())
 
 	err := os.Rename(oldPath, newPath)
 	if err != nil {

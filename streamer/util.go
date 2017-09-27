@@ -1,4 +1,4 @@
-package main
+package streamer
 
 import (
 	"fmt"
@@ -13,7 +13,8 @@ const (
 	tb = 1000 * gb
 )
 
-func lexicalToNumber(size string) (int64, error) {
+// LexicalToNumber converts string sizes to byte sizes
+func LexicalToNumber(size string) (int64, error) {
 	// this condition is necessary for including infinite file size
 	if size == "-1" {
 		return -1, nil

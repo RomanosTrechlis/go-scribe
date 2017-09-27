@@ -1,4 +1,4 @@
-package main
+package streamer
 
 import "testing"
 
@@ -18,7 +18,7 @@ func TestLexicalToNumber(t *testing.T) {
 		{"-1", -1, false},
 	}
 	for _, s := range tc {
-		i, err := lexicalToNumber(s.lexical)
+		i, err := LexicalToNumber(s.lexical)
 		if s.err && err == nil {
 			t.Errorf("For %s expected an error, but got %d", s.lexical, i)
 		}

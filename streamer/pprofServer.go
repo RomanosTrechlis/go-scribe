@@ -1,4 +1,4 @@
-package main
+package streamer
 
 import (
 	"fmt"
@@ -7,8 +7,7 @@ import (
 	"os"
 )
 
-func pprofServer(pport int) {
-	r := http.NewServeMux()
+func pprofServer(r *http.ServeMux, pport int) {
 	// Register pprof handlers
 	r.HandleFunc("/debug/pprof/", pprof.Index)
 	r.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
