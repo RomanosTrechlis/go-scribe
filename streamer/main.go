@@ -1,9 +1,9 @@
 package main
 
 import (
-	"golang.org/x/net/context"
 	"flag"
 	"fmt"
+	"golang.org/x/net/context"
 	"log"
 	"net"
 	"os"

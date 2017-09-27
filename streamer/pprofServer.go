@@ -1,10 +1,10 @@
 package main
 
 import (
-  "fmt"
-  "net/http"
-  "net/http/pprof"
-  "os"
+	"fmt"
+	"net/http"
+	"net/http/pprof"
+	"os"
 )
 
 func pprofServer(pport int) {
