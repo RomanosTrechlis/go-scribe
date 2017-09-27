@@ -15,7 +15,7 @@ func printLogo() {
 	fmt.Println()
 }
 
-func infoBlock(port, pport, maxSize int, path string, pprofInfo bool) {
+func infoBlock(port, pport int, maxSize int64, path string, pprofInfo bool) {
 	// info block
 	fmt.Println("##########################################################")
 	fmt.Println("\t==>\tPort number:\t", port)

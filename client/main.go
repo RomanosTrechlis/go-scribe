@@ -1,12 +1,12 @@
 package main
 
 import (
-	"context"
+	"golang.org/x/net/context"
 	"fmt"
 	"log"
 	"time"
 
-	pb "github.com/RomanosTrechlis/logStream/api"
+	pb "github.com/RomanosTrechlis/logStreamer/api"
 	"google.golang.org/grpc"
 )
 

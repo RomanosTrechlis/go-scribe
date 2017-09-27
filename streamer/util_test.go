@@ -5,7 +5,7 @@ import "testing"
 func TestLexicalToNumber(t *testing.T) {
 	type testCase struct {
 		lexical string
-		number  int
+		number  int64
 		err     bool
 	}
 	var tc = []testCase{

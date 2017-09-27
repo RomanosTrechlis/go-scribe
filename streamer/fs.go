@@ -6,9 +6,6 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
-	"time"
-
-	pb "github.com/RomanosTrechlis/logStreamer/api"
 )
 
 func checkPath(path string) error {
@@ -26,7 +23,7 @@ func checkPath(path string) error {
 	return nil
 }
 
-func fileExceedsMaxSize(info os.FileInfo, req *pb.LogRequest, maxSize int, path string) (bool, error) {
+func fileExceedsMaxSize(info os.FileInfo, maxSize int64, rootPath, path, filename string) (bool, error) {
 	if info == nil {
 		return false, nil
 	}
@@ -35,12 +32,12 @@ func fileExceedsMaxSize(info os.FileInfo, req *pb.LogRequest, maxSize int, path 
 		return false, nil
 	}
 
-	if info.Size() < int64(maxSize) {
+	if info.Size() < maxSize {
 		return false, nil
 	}
 
-	oldPath := fmt.Sprintf("%s/%s/%s.log", path, req.GetPath(), req.GetFilename())
-	newPath := fmt.Sprintf("%s/%s/%s_%v.log", path, req.GetPath(), req.GetFilename(), time.Now())
+	oldPath := fmt.Sprintf("%s/%s/%s.log", rootPath, path, filename)
+	newPath := fmt.Sprintf("%s/%s/%s_%v.log", rootPath, path, filename, printTime())
 
 	err := os.Rename(oldPath, newPath)
 	if err != nil {
@@ -49,28 +46,28 @@ func fileExceedsMaxSize(info os.FileInfo, req *pb.LogRequest, maxSize int, path 
 	return true, nil
 }
 
-func writeLine(req *pb.LogRequest, path string, maxSize int) error {
-	logPath := fmt.Sprintf("%s/%s/%s.log", path, req.GetPath(), req.GetFilename())
+func writeLine(rootPath, path, filename, line string, maxSize int64) error {
+	logPath := fmt.Sprintf("%s/%s/%s.log", rootPath, path, filename)
 	info, err := os.Stat(logPath)
 	if os.IsNotExist(err) {
 		// path doesn't exist and we need to create it.
-		err = os.MkdirAll(filepath.Join(path, req.GetPath()), os.ModePerm)
+		err = os.MkdirAll(filepath.Join(rootPath, path), os.ModePerm)
 		if err != nil {
 			return fmt.Errorf("couldn't create path '%s': %v",
-				filepath.Join(path, req.GetPath()), err)
+				filepath.Join(rootPath, path), err)
 		}
 	}
 
-	createNewFile, err := fileExceedsMaxSize(info, req, maxSize, path)
+	createNewFile, err := fileExceedsMaxSize(info, maxSize, rootPath, path, filename)
 	if err != nil {
 		return fmt.Errorf("failed to rename file: %v", err)
 	}
 	if createNewFile {
 		// re create file if the old has exceeded max size
-		err = os.MkdirAll(filepath.Join(path, req.GetPath()), os.ModePerm)
+		err = os.MkdirAll(filepath.Join(rootPath, path), os.ModePerm)
 		if err != nil {
 			return fmt.Errorf("couldn't create path '%s': %v",
-				filepath.Join(path, req.GetPath()), err)
+				filepath.Join(rootPath, path), err)
 		}
 	}
 
@@ -81,7 +78,6 @@ func writeLine(req *pb.LogRequest, path string, maxSize int) error {
 	}
 	defer f.Close()
 
-	line := req.GetLine()
 	if !strings.HasSuffix(line, "\n") {
 		line += "\n"
 	}

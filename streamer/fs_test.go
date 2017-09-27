@@ -2,11 +2,10 @@ package main
 
 import (
 	"os"
-	"syscall"
 	"testing"
 	"time"
 
-	pb "github.com/RomanosTrechlis/logStream/api"
+	pb "github.com/RomanosTrechlis/logStreamer/api"
 )
 
 // mockStat is a dummy implementation of FileInfo returned by Stat and Lstat.
@@ -15,20 +14,19 @@ type mockStat struct {
 	size    int64
 	mode    os.FileMode
 	modTime time.Time
-	sys     syscall.Stat_t
 	isDir   bool
 }
 
 func (ms mockStat) Size() int64        { return ms.size }
 func (ms mockStat) Mode() os.FileMode  { return ms.mode }
 func (ms mockStat) ModTime() time.Time { return ms.modTime }
-func (ms mockStat) Sys() interface{}   { return &ms.sys }
+func (ms mockStat) Sys() interface{}   { return "" }
 func (ms mockStat) Name() string       { return ms.name }
 func (ms mockStat) IsDir() bool        { return ms.isDir }
 
 func TestFileExceedsMaxSize(t *testing.T) {
 	type testCase struct {
-		maxSize int
+		maxSize int64
 		ms      mockStat
 		req     *pb.LogRequest
 		exp     bool
@@ -69,7 +67,7 @@ func TestFileExceedsMaxSize(t *testing.T) {
 	os.Mkdir("testdata", os.ModePerm)
 	os.Create("testdata/1.log")
 	for _, m := range tc {
-		b, e := fileExceedsMaxSize(m.ms, m.req, m.maxSize, "./")
+		b, e := fileExceedsMaxSize(m.ms, m.maxSize, "./", m.req.GetPath(), m.req.GetFilename())
 		if m.err && e == nil {
 			t.Errorf("Expected err and got no error")
 		}
@@ -117,7 +115,7 @@ func TestWriteLine(t *testing.T) {
 	type testCase struct {
 		req     *pb.LogRequest
 		path    string
-		maxSize int
+		maxSize int64
 		err     bool
 	}
 
@@ -152,7 +150,7 @@ func TestWriteLine(t *testing.T) {
 	f, _ := os.Create(s + "/l.log")
 	f.WriteString("This is a test")
 	for _, m := range tc {
-		err := writeLine(m.req, m.path+"/", m.maxSize)
+		err := writeLine(m.path+"/", m.req.GetPath(), m.req.GetFilename(), m.req.GetLine(), m.maxSize)
 		if m.err && err == nil {
 			t.Errorf("Expected err and got no error")
 		}

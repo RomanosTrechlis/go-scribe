@@ -22,7 +22,7 @@ type logger struct{}
 // Log is the ptotobuf service implementation
 func (l logger) Log(ctx context.Context, in *pb.LogRequest) (*pb.LogResponse, error) {
 	countRequests++
-	stream <- in
+	stream <- *in
 	return &pb.LogResponse{Res: "handling"}, nil
 }
 
@@ -47,7 +47,7 @@ func channelHandler(stop chan struct{}, s *grpc.Server) {
 	for {
 		select {
 		case req := <-stream:
-			err := handleIncomingRequest(req)
+			err := handleIncomingRequest(rootPath, req.GetPath(), req.GetFilename(), req.GetLine())
 			if err != nil {
 				fmt.Printf("hanldeIncomingRequest returned with error: %v", err)
 				shutdown(s)
@@ -60,15 +60,15 @@ func channelHandler(stop chan struct{}, s *grpc.Server) {
 	}
 }
 
-func handleIncomingRequest(req *pb.LogRequest) error {
+func handleIncomingRequest(rootPath, path, filename, line string) error {
 	if console {
-		fmt.Printf("%s/%s.log: %s\n", req.GetPath(), req.GetFilename(), req.GetLine())
+		fmt.Printf("%s/%s.log: %s\n", path, filename, line)
 	}
 
 	var mu sync.RWMutex
 	mu.Lock()
 	defer mu.Unlock()
-	if err := writeLine(req, path, maxSize); err != nil {
+	if err := writeLine(rootPath, path, filename, line, maxSize); err != nil {
 		return fmt.Errorf("failed to write line: %v", err)
 	}
 	return nil
@@ -87,9 +87,9 @@ func printTime() string {
 
 var (
 	port          int
-	stream        chan *pb.LogRequest
-	path          string
-	maxSize       int
+	stream        chan pb.LogRequest
+	rootPath      string
+	maxSize       int64
 	countRequests int64
 	pprofInfo     bool
 	pport         int
@@ -112,7 +112,7 @@ func init() {
 	// pprof port for http server
 	flag.IntVar(&pport, "pport", 1111, "port for pprof server")
 	// path must already exist
-	flag.StringVar(&path, "path", "../logs", "path for logs to be persisted")
+	flag.StringVar(&rootPath, "path", "../logs", "path for logs to be persisted")
 	// the size of log files before they get renamed for storing purposes.
 	size := flag.String("size", "1MB",
 		"max size for individual files, -1B for infinite size")
@@ -127,7 +127,7 @@ func init() {
 
 	// prints some logo and info
 	printLogo()
-	infoBlock(port, pport, maxSize, path, pprofInfo)
+	infoBlock(port, pport, maxSize, rootPath, pprofInfo)
 }
 
 func main() {
@@ -135,13 +135,13 @@ func main() {
 	start := time.Now()
 
 	// validate path passed
-	if err := checkPath(path); err != nil {
+	if err := checkPath(rootPath); err != nil {
 		fmt.Printf("path passed is not valid: %v\n", err)
 		return
 	}
 
 	// stream is the channel that takes LogRequests.
-	stream = make(chan *pb.LogRequest)
+	stream = make(chan pb.LogRequest)
 	// stopRPC waits for an empty struct to stop the rpc server.
 	stopRPC := make(chan struct{})
 	// stopAll channel listens to termination and interupt signals.
