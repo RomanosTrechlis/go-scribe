@@ -8,7 +8,7 @@ import (
 	"syscall"
 	"time"
 
-	pb "github.com/RomanosTrechlis/logStream/api"
+	pb "github.com/RomanosTrechlis/logStreamer/api"
 )
 
 func checkPath(path string) error {

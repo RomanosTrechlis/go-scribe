@@ -1,4 +1,7 @@
 logs/
 java/
+.idea/
+
+**/*.exe
 
 streamer/streamer

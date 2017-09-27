@@ -1,7 +1,7 @@
 package main
 
 import (
-	"context"
+	"golang.org/x/net/context"
 	"flag"
 	"fmt"
 	"log"
@@ -12,7 +12,7 @@ import (
 	"syscall"
 	"time"
 
-	pb "github.com/RomanosTrechlis/logStream/api"
+	pb "github.com/RomanosTrechlis/logStreamer/api"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
