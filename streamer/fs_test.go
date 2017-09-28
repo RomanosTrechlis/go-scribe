@@ -81,7 +81,6 @@ func TestFileExceedsMaxSize(t *testing.T) {
 			t.Errorf("Expected %v and got %v", m.exp, b)
 		}
 	}
-	// housekeep
 	os.RemoveAll("testdata/")
 }
 
@@ -158,7 +157,6 @@ func TestWriteLine(t *testing.T) {
 			t.Errorf("Expected nil error and got '%v'", err)
 		}
 	}
-	// housekeep
 	os.RemoveAll("testdata/")
 	os.RemoveAll("noPath/")
 }

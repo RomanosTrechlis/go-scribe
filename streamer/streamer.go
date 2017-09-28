@@ -158,7 +158,7 @@ func server(stream chan pb.LogRequest, port string, s *grpc.Server) {
 }
 
 const (
-	layout string = time.RFC3339
+	layout string = "2006-01-02T15.04.05Z07.00"
 )
 
 // PrintTime exists for consistency

@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
+	"runtime"
+	"io/ioutil"
 )
 
 // CheckPath checks the validity of a given path
@@ -37,10 +39,10 @@ func fileExceedsMaxSize(info os.FileInfo, maxSize int64, rootPath, path, filenam
 		return false, nil
 	}
 
-	oldPath := fmt.Sprintf("%s/%s/%s.log", rootPath, path, filename)
-	newPath := fmt.Sprintf("%s/%s/%s_%v.log", rootPath, path, filename, PrintTime())
+	oldPath := fmt.Sprintf("%s/%s.log", filepath.Join(rootPath, path), filename)
+	newPath := fmt.Sprintf("%s/%s_%v.log", filepath.Join(rootPath, path), filename, PrintTime())
 
-	err := os.Rename(oldPath, newPath)
+	err := Replace(oldPath, newPath)
 	if err != nil {
 		return false, fmt.Errorf("failed to rename file exceeding %dbytes: %v", maxSize, err)
 	}
@@ -86,5 +88,28 @@ func writeLine(rootPath, path, filename, line string, maxSize int64) error {
 	if err != nil {
 		return fmt.Errorf("couldn't write line: %v", err)
 	}
+	return nil
+}
+
+func Replace(oldpath, newpath string) error {
+	if runtime.GOOS != "windows" {
+		return os.Rename(oldpath, newpath)
+	}
+
+	data, err := ioutil.ReadFile(oldpath)
+	if err != nil {
+		return fmt.Errorf("failed to read data from old file: %v", err)
+	}
+
+	err = ioutil.WriteFile(newpath, data, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write data to new file: %v", err)
+	}
+
+	err = ioutil.WriteFile(oldpath, []byte(""), os.ModePerm)
+	if err != nil {
+		return fmt.Errorf("failed to delete old file: %v", err)
+	}
+
 	return nil
 }
