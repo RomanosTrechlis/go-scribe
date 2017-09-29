@@ -1,3 +1,5 @@
+// +build 1.8
+
 package main
 
 import (
@@ -8,6 +10,8 @@ import (
 	"syscall"
 
 	"github.com/RomanosTrechlis/logStreamer/streamer"
+	"github.com/RomanosTrechlis/logStreamer/profiling"
+	"net/http"
 )
 
 var (
@@ -58,12 +62,15 @@ func main() {
 	stopAll := make(chan os.Signal, 1)
 	signal.Notify(stopAll, syscall.SIGTERM, syscall.SIGINT)
 
-	streamer := streamer.New(rootPath, port, maxSize)
-	if pprofInfo {
-		streamer.WithPProf(pport)
-	}
-	go streamer.Serve()
-	<-stopAll
-	streamer.Shutdown()
+	s := streamer.New(rootPath, port, maxSize)
+	defer s.Shutdown()
+	go s.Serve()
 
+	var srv *http.Server
+	if pprofInfo {
+		srv = profiling.Serve(pport)
+	}
+	defer srv.Shutdown(nil)
+
+	<-stopAll
 }

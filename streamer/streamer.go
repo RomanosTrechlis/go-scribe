@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"net/http"
 	"sync"
 	"time"
 
@@ -24,13 +23,6 @@ type LogStreamer struct {
 	grpcPort int
 	// stopGrpc waits for an empty struct to stop the rpc server.
 	stopGrpc chan struct{}
-
-	// profiling ServeMux
-	pprofServer *http.ServeMux
-	// profiling server port
-	pport int
-	// enablePprof true initiates pprof http server
-	enablePprof bool
 
 	// maximum log file size
 	fileSize int64
@@ -60,13 +52,6 @@ func New(root string, port int, fileSize int64) *LogStreamer {
 	}
 }
 
-// WithPProf adds a profiling server to LogStreamer
-func (s *LogStreamer) WithPProf(port int) {
-	s.enablePprof = true
-	s.pprofServer = http.NewServeMux()
-	s.pport = port
-}
-
 // ServiceHandler implements the protobuf service
 func (s *LogStreamer) ServiceHandler(stop chan struct{}) {
 	for {
@@ -94,11 +79,6 @@ func (s *LogStreamer) Serve() {
 	// rpc server
 	go server(s.stream, fmt.Sprintf(":%d", s.grpcPort), s.grpcServer)
 
-	// profiling
-	if s.enablePprof {
-		go pprofServer(s.pprofServer, s.pport)
-	}
-
 	// ticker
 	go s.tickerServ()
 	<-s.stopAll
@@ -113,7 +93,7 @@ func (s *LogStreamer) Shutdown() {
 	s.ticker.Stop()
 	time.Sleep(1 * time.Second)
 	fmt.Printf("%s [INFO] Log streamer handled %d requests during %v\n",
-		PrintTime(), 0, time.Since(s.startTime))
+		PrintTime(), s.counter, time.Since(s.startTime))
 	fmt.Printf("%s [INFO] Log streamer shut down\n", PrintTime())
 }
 
@@ -121,7 +101,7 @@ func (s *LogStreamer) tickerServ() {
 	for _ = range s.ticker.C {
 		select {
 		case <-s.stopTicker:
-			fmt.Printf("%s [INFO] Ticker is stopping...\n", PrintTime())
+			fmt.Printf("\n%s [INFO] Ticker is stopping...\n", PrintTime())
 			return
 		default:
 			fmt.Printf("%s [INFO] Log Streamer handled %d requests, so far.\n",
@@ -158,7 +138,8 @@ func server(stream chan pb.LogRequest, port string, s *grpc.Server) {
 }
 
 const (
-	layout string = "2006-01-02T15.04.05Z07.00"
+	//layout string = "2006-01-02T15.04.05Z07.00"
+	layout string = "02012006150405"
 )
 
 // PrintTime exists for consistency
