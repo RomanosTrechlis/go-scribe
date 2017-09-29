@@ -3,6 +3,7 @@ package streamer
 import (
 	"fmt"
 	"strconv"
+	"time"
 )
 
 const (
@@ -40,4 +41,9 @@ func LexicalToNumber(size string) (int64, error) {
 		return 0, fmt.Errorf("couldn't parse input to float: %v", err)
 	}
 	return int64(s * m), nil
+}
+
+func printTime(layout string) string {
+	t := time.Now()
+	return t.Local().Format(layout)
 }

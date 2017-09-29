@@ -2,12 +2,12 @@ package streamer
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"syscall"
-	"runtime"
-	"io/ioutil"
 )
 
 // CheckPath checks the validity of a given path
@@ -40,9 +40,9 @@ func fileExceedsMaxSize(info os.FileInfo, maxSize int64, rootPath, path, filenam
 	}
 
 	oldPath := fmt.Sprintf("%s/%s.log", filepath.Join(rootPath, path), filename)
-	newPath := fmt.Sprintf("%s/%s_%v.log", filepath.Join(rootPath, path), filename, PrintTime())
+	newPath := fmt.Sprintf("%s/%s_%v.log", filepath.Join(rootPath, path), filename, printTime(layout))
 
-	err := Replace(oldPath, newPath)
+	err := replace(oldPath, newPath)
 	if err != nil {
 		return false, fmt.Errorf("failed to rename file exceeding %dbytes: %v", maxSize, err)
 	}
@@ -91,7 +91,7 @@ func writeLine(rootPath, path, filename, line string, maxSize int64) error {
 	return nil
 }
 
-func Replace(oldpath, newpath string) error {
+func replace(oldpath, newpath string) error {
 	if runtime.GOOS != "windows" {
 		return os.Rename(oldpath, newpath)
 	}
