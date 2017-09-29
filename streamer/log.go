@@ -1,7 +1,7 @@
 package streamer
 
 import (
-	"context"
+	"golang.org/x/net/context"
 
 	pb "github.com/RomanosTrechlis/logStreamer/api"
 	"google.golang.org/grpc"

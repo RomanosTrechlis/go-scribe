@@ -34,9 +34,10 @@ func LexicalToNumber(size string) (int64, error) {
 	default:
 		return 0, fmt.Errorf("couldn't transform size to bytes")
 	}
+	var s float64
 	s, err := strconv.ParseFloat(size[:l-2], 64)
 	if err != nil {
-		return 0, fmt.Errorf("couldn't parse input '%s' to float", size[:l-2])
+		return 0, fmt.Errorf("couldn't parse input to float: %v", err)
 	}
 	return int64(s * m), nil
 }
