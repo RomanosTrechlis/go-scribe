@@ -48,6 +48,10 @@ build: clean test
 run:
 	${LOG_STREAMER_CMD}/logStreamer -path logs -pprof
 
+secRun:
+	${LOG_STREAMER_CMD}/logStreamer -path logs -pprof -crt ${CERT}/server.crt \
+		-pk ${CERT}/server.key -ca ${CERT}/CertAuth.crt
+
 all: build run
 
 clearLogs:

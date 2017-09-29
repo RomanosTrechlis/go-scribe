@@ -51,6 +51,7 @@ type LogStreamer struct {
 func New(root string, port int, fileSize int64, crt, key, ca string) (*LogStreamer, error) {
 	var srv *grpc.Server
 	if crt != "" && key != "" && ca != "" {
+		fmt.Printf("%s [INFO] Log streamer will start with TLS\n", printTime(logLayout))
 		// Load the certificates from disk
 		certificate, err := tls.LoadX509KeyPair(crt, key)
 		if err != nil {
