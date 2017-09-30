@@ -6,15 +6,15 @@ import (
 	"time"
 
 	pb "github.com/RomanosTrechlis/logStreamer/api"
-	"github.com/RomanosTrechlis/logStreamer/service"
-	"github.com/RomanosTrechlis/logStreamer/util/format/time"
+	logServ "github.com/RomanosTrechlis/logStreamer/service/log"
+	"github.com/RomanosTrechlis/logStreamer/service/ping"
+	p "github.com/RomanosTrechlis/logStreamer/util/format/print"
 	"github.com/RomanosTrechlis/logStreamer/util/gserver"
 	"google.golang.org/grpc"
 )
 
 const (
-	logLayout string = "2006-01-02T15.04.05Z07.00"
-	layout    string = "02012006150405"
+	layout string = "02012006150405"
 )
 
 // LogStreamer holds the servers and other relative information
@@ -38,14 +38,16 @@ type LogStreamer struct {
 	stopTicker chan struct{}
 	startTime  time.Time
 
+	mediator string
+
 	rootPath string
 	counter  int64
 	stopAll  chan struct{}
 }
 
 // New creates a streamer struct
-func New(root string, port int, fileSize int64, crt, key, ca string) (*LogStreamer, error) {
-	srv, err := gserver.New(logLayout, crt, key, ca)
+func New(root string, port int, fileSize int64, mediator, crt, key, ca string) (*LogStreamer, error) {
+	srv, err := gserver.New(crt, key, ca)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create grpc server: %v", err)
 	}
@@ -58,6 +60,7 @@ func New(root string, port int, fileSize int64, crt, key, ca string) (*LogStream
 		ticker:     time.NewTicker(20 * time.Second),
 		stopTicker: make(chan struct{}),
 		rootPath:   root,
+		mediator:   mediator,
 	}, nil
 }
 
@@ -81,14 +84,14 @@ func (s *LogStreamer) ServiceHandler(stop chan struct{}) {
 
 // Serve initializes log streamer's servers
 func (s *LogStreamer) Serve() {
-	fmt.Printf("%s [INFO] Log streamer is starting...\n", ftime.PrintTime(logLayout))
+	p.Print("Log streamer is starting...")
 	s.stopAll = make(chan struct{})
 	s.startTime = time.Now()
 	// go func listens to stream and stop channels
 	go s.ServiceHandler(s.stopGrpc)
 
 	// rpc server
-	go gserver.Serve(s.register(), fmt.Sprintf(":%d", s.grpcPort), s.grpcServer, logLayout)
+	go gserver.Serve(s.register(), fmt.Sprintf(":%d", s.grpcPort), s.grpcServer)
 
 	// ticker
 	go s.tickerServ()
@@ -97,34 +100,36 @@ func (s *LogStreamer) Serve() {
 
 func (s *LogStreamer) register() func() {
 	return func() {
-		log := service.Logger{Stream: s.stream}
+		log := logServ.Logger{Stream: s.stream}
 		pb.RegisterLogStreamerServer(s.grpcServer, log)
+
+		if s.mediator != "" {
+			p := &ping.Pinger{}
+			pb.RegisterPingerServer(s.grpcServer, p)
+		}
 	}
 }
 
 // Shutdown gracefully stops log streamer from serving
 func (s *LogStreamer) Shutdown() {
 	s.stopAll <- struct{}{}
-	fmt.Printf("\n%s [INFO] initializing shut down, please wait.\n",
-		ftime.PrintTime(logLayout))
+	p.Print("Initializing shut down, please wait.")
 	s.stopGrpc <- struct{}{}
 	s.stopTicker <- struct{}{}
 	s.ticker.Stop()
 	time.Sleep(1 * time.Second)
-	fmt.Printf("%s [INFO] Log streamer handled %d requests during %v\n",
-		ftime.PrintTime(logLayout), s.counter, time.Since(s.startTime))
-	fmt.Printf("%s [INFO] Log streamer shut down\n", ftime.PrintTime(logLayout))
+	p.Print(fmt.Sprintf("Log streamer handled %d requests during %v", s.counter, time.Since(s.startTime)))
+	p.Print("Log streamer shut down")
 }
 
 func (s *LogStreamer) tickerServ() {
 	for _ = range s.ticker.C {
 		select {
 		case <-s.stopTicker:
-			fmt.Printf("\n%s [INFO] Ticker is stopping...\n", ftime.PrintTime(logLayout))
+			p.Print("Ticker is stopping...")
 			return
 		default:
-			fmt.Printf("%s [INFO] Log Streamer handled %d requests, so far.\n",
-				ftime.PrintTime(logLayout), s.counter)
+			p.Print(fmt.Sprintf("Log Streamer handled %d requests, so far.", s.counter))
 		}
 	}
 }

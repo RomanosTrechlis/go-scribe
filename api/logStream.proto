@@ -13,6 +13,10 @@ service Pinger {
   rpc Ping(PingRequest) returns (PingResponse) {}
 }
 
+service Register {
+  rpc Register (RegisterRequest) returns (RegisterResponse){}
+}
+
 // message is the structure that get serialized
 // the numbered fields are necessary for the serialization.
 // LogRequest is the structure that gets serialized
@@ -38,4 +42,13 @@ message PingRequest {
 // PingResponse returns the mediator's response
 message PingResponse {
   int32 res = 2;
+}
+
+message RegisterRequest {
+  string id = 1;
+  string addr = 2;
+}
+
+message RegisterResponse {
+  string res = 1;
 }

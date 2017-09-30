@@ -3,17 +3,23 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"net/http"
 
-	"github.com/RomanosTrechlis/logStreamer/pinger"
+	pb "github.com/RomanosTrechlis/logStreamer/api"
 	"github.com/RomanosTrechlis/logStreamer/profiling"
 	"github.com/RomanosTrechlis/logStreamer/streamer"
+	"google.golang.org/grpc"
+
+	p "github.com/RomanosTrechlis/logStreamer/util/format/print"
 )
 
 var (
@@ -75,20 +81,51 @@ func main() {
 	stopAll := make(chan os.Signal, 1)
 	signal.Notify(stopAll, syscall.SIGTERM, syscall.SIGINT)
 
-	s, err := streamer.New(rootPath, port, maxSize, cert, key, ca)
+	// register to mediator
+	if mediator != "" {
+		conn, err := grpc.Dial(mediator,
+			grpc.WithInsecure(),
+			grpc.WithTimeout(1*time.Second))
+		if err != nil {
+			log.Fatalf("did not connect: %v", err)
+		}
+		defer conn.Close()
+
+		c := pb.NewRegisterClient(conn)
+		req := &pb.RegisterRequest{
+			Id:   "123456",
+			Addr: fmt.Sprintf(":%d", port),
+		}
+		var retries = 3
+		var success = false
+		for retries > 0 {
+			r, err := c.Register(context.Background(), req)
+			if err != nil {
+				retries--
+				continue
+			}
+			if r.GetRes() != "Success" {
+				retries--
+				continue
+			}
+			success = true
+			break
+		}
+		if !success {
+			fmt.Fprintf(os.Stderr, "failed to register streamer to mediator '%s'", mediator)
+			os.Exit(2)
+		}
+
+		p.Print("Successfully registered to mediator")
+	}
+
+	s, err := streamer.New(rootPath, port, maxSize, mediator, cert, key, ca)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(2)
 	}
 	defer s.Shutdown()
 	go s.Serve()
-
-	// begin pinging mediator
-	if mediator != "" {
-		p := pinger.New(mediator)
-		go p.Ping("123456", 5)
-		defer p.End()
-	}
 
 	var srv *http.Server
 	if pprofInfo {

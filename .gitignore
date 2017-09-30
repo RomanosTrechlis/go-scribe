@@ -1,8 +1,7 @@
 logs/
-java/
 .idea/
 
 **/*.exe
 
-streamer/streamer
 cmd/logStreamer/logStreamer
+cmd/logMediator/logMediator

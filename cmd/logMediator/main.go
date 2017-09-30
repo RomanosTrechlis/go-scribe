@@ -37,6 +37,8 @@ func init() {
 	flag.StringVar(&key, "pk", "", "host's private key")
 	flag.StringVar(&ca, "ca", "", "certificate authority's certificate")
 	flag.Parse()
+
+	printLogo()
 }
 
 func main() {

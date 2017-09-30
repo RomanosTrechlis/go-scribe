@@ -8,19 +8,20 @@ import (
 	"log"
 	"net"
 
-	"github.com/RomanosTrechlis/logStreamer/util/format/time"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
+
+	p "github.com/RomanosTrechlis/logStreamer/util/format/print"
 )
 
 // New creates a grpc server with or without SSL
-func New(layout, crt, key, ca string) (*grpc.Server, error) {
+func New(crt, key, ca string) (*grpc.Server, error) {
 	if crt == "" || key == "" || ca == "" {
 		return grpc.NewServer(), nil
 	}
 
-	fmt.Printf("%s [INFO] Log streamer will start with TLS\n", ftime.PrintTime(layout))
+	p.Print("Log streamer will start with TLS")
 	// Load the certifmediatoricates from disk
 	certificate, err := tls.LoadX509KeyPair(crt, key)
 	if err != nil {
@@ -51,7 +52,7 @@ func New(layout, crt, key, ca string) (*grpc.Server, error) {
 }
 
 // Serve listen for LogRequests
-func Serve(register func(), addr string, s *grpc.Server, layout string) {
+func Serve(register func(), addr string, s *grpc.Server) {
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
@@ -64,5 +65,5 @@ func Serve(register func(), addr string, s *grpc.Server, layout string) {
 	if err != nil {
 		fmt.Printf("failed to serve: %v", err)
 	}
-	fmt.Printf("\n%s [INFO] rpc server stopped\n", ftime.PrintTime(layout))
+	p.Print("RPC server stopped")
 }

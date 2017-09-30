@@ -66,7 +66,7 @@ func main() {
 		defer conn.Close()
 	} else {
 		var err error
-		conn, err = grpc.Dial(":8080",
+		conn, err = grpc.Dial(":8000",
 			grpc.WithInsecure(),
 			grpc.WithTimeout(1*time.Second))
 		if err != nil {

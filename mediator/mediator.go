@@ -1,22 +1,29 @@
 package mediator
 
 import (
-  "golang.org/x/net/context"
 	"fmt"
+	"math/rand"
+	"sync"
 	"time"
 
-	pb "github.com/RomanosTrechlis/logStreamer/api"
-	"github.com/RomanosTrechlis/logStreamer/util/gserver"
-  "github.com/RomanosTrechlis/logStreamer/service"
-  "github.com/RomanosTrechlis/logStreamer/util/format/time"
-	"google.golang.org/grpc"
-)
+	"golang.org/x/net/context"
 
-const logLayout string = "2006-01-02T15.04.05Z07.00"
+	pb "github.com/RomanosTrechlis/logStreamer/api"
+	logServ "github.com/RomanosTrechlis/logStreamer/service/log"
+	"github.com/RomanosTrechlis/logStreamer/service/register"
+	"github.com/RomanosTrechlis/logStreamer/util/gserver"
+	"google.golang.org/grpc"
+
+	p "github.com/RomanosTrechlis/logStreamer/util/format/print"
+)
 
 // Mediator grpc server and other relative info
 type Mediator struct {
-  streamers map[string]*grpc.ClientConn
+	// mux protectes streamers and streamersCon to be
+	// accessed during pinging.
+	mux          sync.Mutex
+	streamers    map[string]string
+	streamersCon map[string]*grpc.ClientConn
 
 	// input stream of protobuf requests
 	stream chan pb.LogRequest
@@ -34,17 +41,18 @@ type Mediator struct {
 
 // New creates a new mediator
 func New(port int, crt, key, ca string) (*Mediator, error) {
-	srv, err := gserver.New(logLayout, crt, key, ca)
+	srv, err := gserver.New(crt, key, ca)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create grpc server: %v", err)
 	}
 
 	m := &Mediator{
-    stream: make(chan pb.LogRequest),
-    grpcServer: srv,
-    grpcPort: port,
-    streamers: make(map[string]*grpc.ClientConn),
-  }
+		stream:       make(chan pb.LogRequest),
+		grpcServer:   srv,
+		grpcPort:     port,
+		streamersCon: make(map[string]*grpc.ClientConn),
+		streamers:    make(map[string]string),
+	}
 	return m, nil
 }
 
@@ -53,9 +61,12 @@ func (m *Mediator) ServiceHandler(stop chan struct{}) {
 	for {
 		select {
 		case req := <-m.stream:
-      // does something
-      client := pb.NewLogStreamerClient(m.streamers["test"])
-      client.Log(context.Background(), &req)
+			conn, ok := m.streamersCon["123456"]
+			if !ok {
+				continue
+			}
+			client := pb.NewLogStreamerClient(conn)
+			client.Log(context.Background(), &req)
 			m.counter++
 		case <-stop:
 			return
@@ -65,46 +76,89 @@ func (m *Mediator) ServiceHandler(stop chan struct{}) {
 
 // Serve starts mediator server
 func (m *Mediator) Serve() {
-	fmt.Printf("%s [INFO] Log streamer is starting...\n", ftime.PrintTime(logLayout))
+	p.Print("Log Mediator is starting...")
 	m.stopAll = make(chan struct{})
 	m.stopGrpc = make(chan struct{})
 	m.startTime = time.Now()
 
-  // todo: remove
-  conn, err := grpc.Dial(":8080",
-		grpc.WithInsecure(),
-		grpc.WithTimeout(1*time.Second))
-  if err != nil {
-    return
-  }
-  m.streamers["test"] = conn
-
-	// go func listens to stream and stop channels
+	// for log service
 	go m.ServiceHandler(m.stopGrpc)
+	go gserver.Serve(m.register(), fmt.Sprintf(":%d", m.grpcPort), m.grpcServer)
 
-	// rpc server
-	go gserver.Serve(m.register(), fmt.Sprintf(":%d", m.grpcPort), m.grpcServer, logLayout)
+	go m.pingSubscribers()
 
 	<-m.stopAll
 }
 
+func (m *Mediator) pingSubscribers() {
+	for _ = range time.Tick(5 * time.Second) {
+		m.mux.Lock()
+		for key, val := range m.streamers {
+			if _, ok := m.streamersCon[key]; !ok {
+				conn, err := createConnection(val)
+				if err != nil {
+					delete(m.streamers, key)
+					continue
+				}
+				m.streamersCon[key] = conn
+			}
+			if !isSubscriberLive(m.streamersCon[key]) {
+				delete(m.streamers, key)
+				delete(m.streamersCon, key)
+				p.Print(fmt.Sprintf("Deregistering streamer %s at %s", key, val))
+			}
+		}
+		m.mux.Unlock()
+	}
+}
+
+func isSubscriberLive(conn *grpc.ClientConn) bool {
+	c := pb.NewPingerClient(conn)
+	req := &pb.PingRequest{
+		A: rand.Int31(),
+		B: rand.Int31(),
+	}
+	r, err := c.Ping(context.Background(), req)
+	if err != nil {
+		return false
+	}
+	if r.GetRes() != req.GetA()*req.GetB() {
+		return false
+	}
+	return true
+}
+
+func createConnection(addr string) (*grpc.ClientConn, error) {
+	conn, err := grpc.Dial(addr,
+		grpc.WithInsecure(),
+		grpc.WithTimeout(1*time.Second))
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to streamer: %v", err)
+	}
+	return conn, nil
+}
+
 func (m *Mediator) register() func() {
 	return func() {
-		med := &service.Pinger{
-      Handle: func(id string) {fmt.Println(id)},
-    }
-		pb.RegisterPingerServer(m.grpcServer, med)
+		l := &logServ.Logger{
+			Stream: m.stream,
+		}
+		pb.RegisterLogStreamerServer(m.grpcServer, l)
+
+		med := &register.Register{
+			Subscribers: m.streamers,
+		}
+		pb.RegisterRegisterServer(m.grpcServer, med)
 	}
 }
 
 // Shutdown gracefully stops mediator from serving
 func (m *Mediator) Shutdown() {
 	m.stopAll <- struct{}{}
-	fmt.Printf("\n%s [INFO] initializing shut down, please wait.\n",
-		ftime.PrintTime(logLayout))
+	p.Print("Initializing shut down, please wait.")
 	m.stopGrpc <- struct{}{}
 	time.Sleep(1 * time.Second)
-	fmt.Printf("%s [INFO] Log streamer handled %d requests during %v\n",
-		ftime.PrintTime(logLayout), m.counter, time.Since(m.startTime))
-	fmt.Printf("%s [INFO] Log streamer shut down\n", ftime.PrintTime(logLayout))
+	p.Print(fmt.Sprintf("Log streamer handled %d requests during %v",
+		m.counter, time.Since(m.startTime)))
+	p.Print("Log Mediator shut down")
 }
