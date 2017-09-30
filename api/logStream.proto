@@ -9,6 +9,10 @@ service LogStreamer {
   rpc Log(LogRequest) returns (LogResponse) {}
 }
 
+service Pinger {
+  rpc Ping(PingRequest) returns (PingResponse) {}
+}
+
 // message is the structure that get serialized
 // the numbered fields are necessary for the serialization.
 // LogRequest is the structure that gets serialized
@@ -22,4 +26,16 @@ message LogRequest {
 // LogResponse is the reply from rpc server
 message LogResponse {
   string res = 1;
+}
+
+// PingRequest sends two numbers to mediator
+message PingRequest {
+  int32 a = 1;
+  int32 b = 2;
+  string streamerId = 3;
+}
+
+// PingResponse returns the mediator's response
+message PingResponse {
+  int32 res = 2;
 }

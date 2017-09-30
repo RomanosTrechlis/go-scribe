@@ -8,6 +8,8 @@ import (
 	"runtime"
 	"strings"
 	"syscall"
+
+	"github.com/RomanosTrechlis/logStreamer/util/format/time"
 )
 
 // CheckPath checks the validity of a given path
@@ -40,7 +42,7 @@ func fileExceedsMaxSize(info os.FileInfo, maxSize int64, rootPath, path, filenam
 	}
 
 	oldPath := fmt.Sprintf("%s/%s.log", filepath.Join(rootPath, path), filename)
-	newPath := fmt.Sprintf("%s/%s_%v.log", filepath.Join(rootPath, path), filename, printTime(layout))
+	newPath := fmt.Sprintf("%s/%s_%v.log", filepath.Join(rootPath, path), filename, ftime.PrintTime(layout))
 
 	err := replace(oldPath, newPath)
 	if err != nil {

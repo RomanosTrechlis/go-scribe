@@ -2,6 +2,7 @@ PROJECT = logStreamer
 GITHUB = /home/romanos/GO/src/github.com/RomanosTrechlis
 PROJECT_DIR = ${GITHUB}/${PROJECT}
 LOG_STREAMER_CMD = ${PROJECT_DIR}/cmd/${PROJECT}
+MEDIATOR = ${PROJECT_DIR}/cmd/logMediator
 STREAMER = ${PROJECT_DIR}/streamer
 API = ${PROJECT_DIR}/api
 CERT = ${PROJECT_DIR}/certs
@@ -23,6 +24,10 @@ clean:
 	then rm -rf ${LOG_STREAMER_CMD}/logStreamer; \
 	else echo "file doesn't exist. nothing to do"; \
 	fi
+	if test -f  ${MEDIATOR}/logMediator; \
+	then rm -rf ${MEDIATOR}/logMediator; \
+	else echo "file doesn't exist. nothing to do"; \
+	fi
 	if test -f  ${LOG_STREAMER_CMD}/logStreamer.exe; \
 	then rm -rf ${LOG_STREAMER_CMD}/logStreamer.exe; \
 	else echo "file doesn't exist. nothing to do"; \
@@ -42,22 +47,31 @@ clean:
 	#clear
 	echo "everything is clean"
 
-build: clean test
+buildStreamer:
 	cd ${LOG_STREAMER_CMD} && go build && cd ${PROJECT_DIR}
 
-run:
+buildMediator:
+	cd ${MEDIATOR} && go build && cd ${PROJECT_DIR}
+
+build: clean test buildStreamer buildMediator
+
+runStreamer:
 	${LOG_STREAMER_CMD}/logStreamer -path logs -pprof
+
+runMediator:
+	${MEDIATOR}/logMediator -pprof -pport 1122
 
 secRun:
 	${LOG_STREAMER_CMD}/logStreamer -path logs -pprof -crt ${CERT}/server.crt \
 		-pk ${CERT}/server.key -ca ${CERT}/CertAuth.crt
 
-all: build run
+all: build runStreamer
 
 clearLogs:
 	rm -rf ${PROJECT_DIR}/logs
 	mkdir ${PROJECT_DIR}/logs
 
+# compiling .proto files
 protoGo:
 	cd ${API} && protoc --go_out=plugins=grpc:. *.proto && cd ${PROJECT_DIR}
 
@@ -66,6 +80,8 @@ protoJava:
 		--plugin=protoc-gen-grpc=${GRPC_JAVA_PLUGIN} \
 		--java_out=. *.proto && cd ${PROJECT_DIR}
 
+
+# dummy certificates for client, server, ans certificate authority
 cleanCert:
 	if test -d  ${CERT}; \
 	then rm -rf ${CERT}; \

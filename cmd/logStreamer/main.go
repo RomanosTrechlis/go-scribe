@@ -11,6 +11,7 @@ import (
 
 	"net/http"
 
+	"github.com/RomanosTrechlis/logStreamer/pinger"
 	"github.com/RomanosTrechlis/logStreamer/profiling"
 	"github.com/RomanosTrechlis/logStreamer/streamer"
 )
@@ -20,6 +21,7 @@ var (
 	pprofInfo, console bool
 	rootPath           string
 	maxSize            int64
+	mediator           string
 )
 
 var (
@@ -36,6 +38,8 @@ func init() {
 		"additional server for pprof functionality")
 	// enable/disable console dumps
 	flag.BoolVar(&console, "console", false, "dumps log lines to console")
+	// enable/disable cluster functionality
+	flag.StringVar(&mediator, "mediator", "", "mediators address if exists, i.e 127.0.0.1:8080")
 	// pprof port for http server
 	flag.IntVar(&pport, "pport", 1111, "port for pprof server")
 	// path must already exist
@@ -73,11 +77,18 @@ func main() {
 
 	s, err := streamer.New(rootPath, port, maxSize, cert, key, ca)
 	if err != nil {
-		fmt.Printf("%v\n", err)
-		return
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(2)
 	}
 	defer s.Shutdown()
 	go s.Serve()
+
+	// begin pinging mediator
+	if mediator != "" {
+		p := pinger.New(mediator)
+		go p.Ping("123456", 5)
+		defer p.End()
+	}
 
 	var srv *http.Server
 	if pprofInfo {

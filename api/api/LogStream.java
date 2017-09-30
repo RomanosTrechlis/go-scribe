@@ -1338,6 +1338,1102 @@ public final class LogStream {
 
   }
 
+  public interface PingRequestOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:api.PingRequest)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>int32 a = 1;</code>
+     */
+    int getA();
+
+    /**
+     * <code>int32 b = 2;</code>
+     */
+    int getB();
+
+    /**
+     * <code>string streamerId = 3;</code>
+     */
+    java.lang.String getStreamerId();
+    /**
+     * <code>string streamerId = 3;</code>
+     */
+    com.google.protobuf.ByteString
+        getStreamerIdBytes();
+  }
+  /**
+   * <pre>
+   * PingRequest sends two numbers to mediator
+   * </pre>
+   *
+   * Protobuf type {@code api.PingRequest}
+   */
+  public  static final class PingRequest extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:api.PingRequest)
+      PingRequestOrBuilder {
+    // Use PingRequest.newBuilder() to construct.
+    private PingRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private PingRequest() {
+      a_ = 0;
+      b_ = 0;
+      streamerId_ = "";
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return com.google.protobuf.UnknownFieldSet.getDefaultInstance();
+    }
+    private PingRequest(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!input.skipField(tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+
+              a_ = input.readInt32();
+              break;
+            }
+            case 16: {
+
+              b_ = input.readInt32();
+              break;
+            }
+            case 26: {
+              java.lang.String s = input.readStringRequireUtf8();
+
+              streamerId_ = s;
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return api.LogStream.internal_static_api_PingRequest_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return api.LogStream.internal_static_api_PingRequest_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              api.LogStream.PingRequest.class, api.LogStream.PingRequest.Builder.class);
+    }
+
+    public static final int A_FIELD_NUMBER = 1;
+    private int a_;
+    /**
+     * <code>int32 a = 1;</code>
+     */
+    public int getA() {
+      return a_;
+    }
+
+    public static final int B_FIELD_NUMBER = 2;
+    private int b_;
+    /**
+     * <code>int32 b = 2;</code>
+     */
+    public int getB() {
+      return b_;
+    }
+
+    public static final int STREAMERID_FIELD_NUMBER = 3;
+    private volatile java.lang.Object streamerId_;
+    /**
+     * <code>string streamerId = 3;</code>
+     */
+    public java.lang.String getStreamerId() {
+      java.lang.Object ref = streamerId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        streamerId_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>string streamerId = 3;</code>
+     */
+    public com.google.protobuf.ByteString
+        getStreamerIdBytes() {
+      java.lang.Object ref = streamerId_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        streamerId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (a_ != 0) {
+        output.writeInt32(1, a_);
+      }
+      if (b_ != 0) {
+        output.writeInt32(2, b_);
+      }
+      if (!getStreamerIdBytes().isEmpty()) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 3, streamerId_);
+      }
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (a_ != 0) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(1, a_);
+      }
+      if (b_ != 0) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(2, b_);
+      }
+      if (!getStreamerIdBytes().isEmpty()) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, streamerId_);
+      }
+      memoizedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof api.LogStream.PingRequest)) {
+        return super.equals(obj);
+      }
+      api.LogStream.PingRequest other = (api.LogStream.PingRequest) obj;
+
+      boolean result = true;
+      result = result && (getA()
+          == other.getA());
+      result = result && (getB()
+          == other.getB());
+      result = result && getStreamerId()
+          .equals(other.getStreamerId());
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + A_FIELD_NUMBER;
+      hash = (53 * hash) + getA();
+      hash = (37 * hash) + B_FIELD_NUMBER;
+      hash = (53 * hash) + getB();
+      hash = (37 * hash) + STREAMERID_FIELD_NUMBER;
+      hash = (53 * hash) + getStreamerId().hashCode();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static api.LogStream.PingRequest parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static api.LogStream.PingRequest parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static api.LogStream.PingRequest parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static api.LogStream.PingRequest parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static api.LogStream.PingRequest parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static api.LogStream.PingRequest parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static api.LogStream.PingRequest parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static api.LogStream.PingRequest parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static api.LogStream.PingRequest parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static api.LogStream.PingRequest parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static api.LogStream.PingRequest parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static api.LogStream.PingRequest parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(api.LogStream.PingRequest prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * PingRequest sends two numbers to mediator
+     * </pre>
+     *
+     * Protobuf type {@code api.PingRequest}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:api.PingRequest)
+        api.LogStream.PingRequestOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return api.LogStream.internal_static_api_PingRequest_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return api.LogStream.internal_static_api_PingRequest_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                api.LogStream.PingRequest.class, api.LogStream.PingRequest.Builder.class);
+      }
+
+      // Construct using api.LogStream.PingRequest.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        a_ = 0;
+
+        b_ = 0;
+
+        streamerId_ = "";
+
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return api.LogStream.internal_static_api_PingRequest_descriptor;
+      }
+
+      public api.LogStream.PingRequest getDefaultInstanceForType() {
+        return api.LogStream.PingRequest.getDefaultInstance();
+      }
+
+      public api.LogStream.PingRequest build() {
+        api.LogStream.PingRequest result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public api.LogStream.PingRequest buildPartial() {
+        api.LogStream.PingRequest result = new api.LogStream.PingRequest(this);
+        result.a_ = a_;
+        result.b_ = b_;
+        result.streamerId_ = streamerId_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof api.LogStream.PingRequest) {
+          return mergeFrom((api.LogStream.PingRequest)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(api.LogStream.PingRequest other) {
+        if (other == api.LogStream.PingRequest.getDefaultInstance()) return this;
+        if (other.getA() != 0) {
+          setA(other.getA());
+        }
+        if (other.getB() != 0) {
+          setB(other.getB());
+        }
+        if (!other.getStreamerId().isEmpty()) {
+          streamerId_ = other.streamerId_;
+          onChanged();
+        }
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        api.LogStream.PingRequest parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (api.LogStream.PingRequest) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+
+      private int a_ ;
+      /**
+       * <code>int32 a = 1;</code>
+       */
+      public int getA() {
+        return a_;
+      }
+      /**
+       * <code>int32 a = 1;</code>
+       */
+      public Builder setA(int value) {
+        
+        a_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>int32 a = 1;</code>
+       */
+      public Builder clearA() {
+        
+        a_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private int b_ ;
+      /**
+       * <code>int32 b = 2;</code>
+       */
+      public int getB() {
+        return b_;
+      }
+      /**
+       * <code>int32 b = 2;</code>
+       */
+      public Builder setB(int value) {
+        
+        b_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>int32 b = 2;</code>
+       */
+      public Builder clearB() {
+        
+        b_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object streamerId_ = "";
+      /**
+       * <code>string streamerId = 3;</code>
+       */
+      public java.lang.String getStreamerId() {
+        java.lang.Object ref = streamerId_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          streamerId_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>string streamerId = 3;</code>
+       */
+      public com.google.protobuf.ByteString
+          getStreamerIdBytes() {
+        java.lang.Object ref = streamerId_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          streamerId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>string streamerId = 3;</code>
+       */
+      public Builder setStreamerId(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  
+        streamerId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string streamerId = 3;</code>
+       */
+      public Builder clearStreamerId() {
+        
+        streamerId_ = getDefaultInstance().getStreamerId();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string streamerId = 3;</code>
+       */
+      public Builder setStreamerIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+        
+        streamerId_ = value;
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return this;
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return this;
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:api.PingRequest)
+    }
+
+    // @@protoc_insertion_point(class_scope:api.PingRequest)
+    private static final api.LogStream.PingRequest DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new api.LogStream.PingRequest();
+    }
+
+    public static api.LogStream.PingRequest getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<PingRequest>
+        PARSER = new com.google.protobuf.AbstractParser<PingRequest>() {
+      public PingRequest parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new PingRequest(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<PingRequest> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<PingRequest> getParserForType() {
+      return PARSER;
+    }
+
+    public api.LogStream.PingRequest getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface PingResponseOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:api.PingResponse)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>int32 res = 2;</code>
+     */
+    int getRes();
+  }
+  /**
+   * <pre>
+   * PingResponse returns the mediator's response
+   * </pre>
+   *
+   * Protobuf type {@code api.PingResponse}
+   */
+  public  static final class PingResponse extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:api.PingResponse)
+      PingResponseOrBuilder {
+    // Use PingResponse.newBuilder() to construct.
+    private PingResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private PingResponse() {
+      res_ = 0;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return com.google.protobuf.UnknownFieldSet.getDefaultInstance();
+    }
+    private PingResponse(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!input.skipField(tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 16: {
+
+              res_ = input.readInt32();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return api.LogStream.internal_static_api_PingResponse_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return api.LogStream.internal_static_api_PingResponse_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              api.LogStream.PingResponse.class, api.LogStream.PingResponse.Builder.class);
+    }
+
+    public static final int RES_FIELD_NUMBER = 2;
+    private int res_;
+    /**
+     * <code>int32 res = 2;</code>
+     */
+    public int getRes() {
+      return res_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (res_ != 0) {
+        output.writeInt32(2, res_);
+      }
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (res_ != 0) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(2, res_);
+      }
+      memoizedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof api.LogStream.PingResponse)) {
+        return super.equals(obj);
+      }
+      api.LogStream.PingResponse other = (api.LogStream.PingResponse) obj;
+
+      boolean result = true;
+      result = result && (getRes()
+          == other.getRes());
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + RES_FIELD_NUMBER;
+      hash = (53 * hash) + getRes();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static api.LogStream.PingResponse parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static api.LogStream.PingResponse parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static api.LogStream.PingResponse parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static api.LogStream.PingResponse parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static api.LogStream.PingResponse parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static api.LogStream.PingResponse parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static api.LogStream.PingResponse parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static api.LogStream.PingResponse parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static api.LogStream.PingResponse parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static api.LogStream.PingResponse parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static api.LogStream.PingResponse parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static api.LogStream.PingResponse parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(api.LogStream.PingResponse prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * PingResponse returns the mediator's response
+     * </pre>
+     *
+     * Protobuf type {@code api.PingResponse}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:api.PingResponse)
+        api.LogStream.PingResponseOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return api.LogStream.internal_static_api_PingResponse_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return api.LogStream.internal_static_api_PingResponse_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                api.LogStream.PingResponse.class, api.LogStream.PingResponse.Builder.class);
+      }
+
+      // Construct using api.LogStream.PingResponse.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        res_ = 0;
+
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return api.LogStream.internal_static_api_PingResponse_descriptor;
+      }
+
+      public api.LogStream.PingResponse getDefaultInstanceForType() {
+        return api.LogStream.PingResponse.getDefaultInstance();
+      }
+
+      public api.LogStream.PingResponse build() {
+        api.LogStream.PingResponse result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public api.LogStream.PingResponse buildPartial() {
+        api.LogStream.PingResponse result = new api.LogStream.PingResponse(this);
+        result.res_ = res_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof api.LogStream.PingResponse) {
+          return mergeFrom((api.LogStream.PingResponse)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(api.LogStream.PingResponse other) {
+        if (other == api.LogStream.PingResponse.getDefaultInstance()) return this;
+        if (other.getRes() != 0) {
+          setRes(other.getRes());
+        }
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        api.LogStream.PingResponse parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (api.LogStream.PingResponse) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+
+      private int res_ ;
+      /**
+       * <code>int32 res = 2;</code>
+       */
+      public int getRes() {
+        return res_;
+      }
+      /**
+       * <code>int32 res = 2;</code>
+       */
+      public Builder setRes(int value) {
+        
+        res_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>int32 res = 2;</code>
+       */
+      public Builder clearRes() {
+        
+        res_ = 0;
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return this;
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return this;
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:api.PingResponse)
+    }
+
+    // @@protoc_insertion_point(class_scope:api.PingResponse)
+    private static final api.LogStream.PingResponse DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new api.LogStream.PingResponse();
+    }
+
+    public static api.LogStream.PingResponse getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<PingResponse>
+        PARSER = new com.google.protobuf.AbstractParser<PingResponse>() {
+      public PingResponse parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new PingResponse(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<PingResponse> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<PingResponse> getParserForType() {
+      return PARSER;
+    }
+
+    public api.LogStream.PingResponse getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_api_LogRequest_descriptor;
   private static final 
@@ -1348,6 +2444,16 @@ public final class LogStream {
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_api_LogResponse_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_api_PingRequest_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_api_PingRequest_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_api_PingResponse_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_api_PingResponse_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -1359,9 +2465,12 @@ public final class LogStream {
     java.lang.String[] descriptorData = {
       "\n\017logStream.proto\022\003api\":\n\nLogRequest\022\020\n\010" +
       "filename\030\001 \001(\t\022\014\n\004path\030\002 \001(\t\022\014\n\004line\030\003 \001" +
-      "(\t\"\032\n\013LogResponse\022\013\n\003res\030\001 \001(\t29\n\013LogStr" +
-      "eamer\022*\n\003Log\022\017.api.LogRequest\032\020.api.LogR" +
-      "esponse\"\000b\006proto3"
+      "(\t\"\032\n\013LogResponse\022\013\n\003res\030\001 \001(\t\"7\n\013PingRe" +
+      "quest\022\t\n\001a\030\001 \001(\005\022\t\n\001b\030\002 \001(\005\022\022\n\nstreamerI" +
+      "d\030\003 \001(\t\"\033\n\014PingResponse\022\013\n\003res\030\002 \001(\00529\n\013" +
+      "LogStreamer\022*\n\003Log\022\017.api.LogRequest\032\020.ap" +
+      "i.LogResponse\"\00027\n\006Pinger\022-\n\004Ping\022\020.api." +
+      "PingRequest\032\021.api.PingResponse\"\000b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -1386,6 +2495,18 @@ public final class LogStream {
     internal_static_api_LogResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_api_LogResponse_descriptor,
+        new java.lang.String[] { "Res", });
+    internal_static_api_PingRequest_descriptor =
+      getDescriptor().getMessageTypes().get(2);
+    internal_static_api_PingRequest_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_api_PingRequest_descriptor,
+        new java.lang.String[] { "A", "B", "StreamerId", });
+    internal_static_api_PingResponse_descriptor =
+      getDescriptor().getMessageTypes().get(3);
+    internal_static_api_PingResponse_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_api_PingResponse_descriptor,
         new java.lang.String[] { "Res", });
   }
 

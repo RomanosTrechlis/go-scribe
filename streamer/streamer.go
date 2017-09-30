@@ -1,19 +1,15 @@
 package streamer
 
 import (
-	"crypto/tls"
-	"crypto/x509"
 	"fmt"
-	"io/ioutil"
-	"log"
-	"net"
 	"sync"
 	"time"
 
 	pb "github.com/RomanosTrechlis/logStreamer/api"
+	"github.com/RomanosTrechlis/logStreamer/service"
+	"github.com/RomanosTrechlis/logStreamer/util/format/time"
+	"github.com/RomanosTrechlis/logStreamer/util/gserver"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/reflection"
 )
 
 const (
@@ -49,40 +45,10 @@ type LogStreamer struct {
 
 // New creates a streamer struct
 func New(root string, port int, fileSize int64, crt, key, ca string) (*LogStreamer, error) {
-	var srv *grpc.Server
-	if crt != "" && key != "" && ca != "" {
-		fmt.Printf("%s [INFO] Log streamer will start with TLS\n", printTime(logLayout))
-		// Load the certificates from disk
-		certificate, err := tls.LoadX509KeyPair(crt, key)
-		if err != nil {
-			return nil, fmt.Errorf("could not load server key pair: %s", err)
-		}
-
-		// Create a certificate pool from the certificate authority
-		certPool := x509.NewCertPool()
-		ca, err := ioutil.ReadFile(ca)
-		if err != nil {
-			return nil, fmt.Errorf("could not read ca certificate: %s", err)
-		}
-
-		// Append the client certificates from the CA
-		if ok := certPool.AppendCertsFromPEM(ca); !ok {
-			return nil, fmt.Errorf("failed to append client certs")
-		}
-
-		// Create the TLS credentials
-		creds := credentials.NewTLS(&tls.Config{
-			ClientAuth:   tls.RequireAndVerifyClientCert,
-			Certificates: []tls.Certificate{certificate},
-			ClientCAs:    certPool,
-		})
-
-		// Create the gRPC server with the credentials
-		srv = grpc.NewServer(grpc.Creds(creds))
-	} else {
-		srv = grpc.NewServer()
+	srv, err := gserver.New(logLayout, crt, key, ca)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create grpc server: %v", err)
 	}
-
 	return &LogStreamer{
 		stream:     make(chan pb.LogRequest),
 		grpcServer: srv,
@@ -115,43 +81,50 @@ func (s *LogStreamer) ServiceHandler(stop chan struct{}) {
 
 // Serve initializes log streamer's servers
 func (s *LogStreamer) Serve() {
-	fmt.Printf("%s [INFO] Log streamer is starting...\n", printTime(logLayout))
+	fmt.Printf("%s [INFO] Log streamer is starting...\n", ftime.PrintTime(logLayout))
 	s.stopAll = make(chan struct{})
 	s.startTime = time.Now()
 	// go func listens to stream and stop channels
 	go s.ServiceHandler(s.stopGrpc)
 
 	// rpc server
-	go server(s.stream, fmt.Sprintf("127.0.0.1:%d", s.grpcPort), s.grpcServer)
+	go gserver.Serve(s.register(), fmt.Sprintf(":%d", s.grpcPort), s.grpcServer, logLayout)
 
 	// ticker
 	go s.tickerServ()
 	<-s.stopAll
 }
 
+func (s *LogStreamer) register() func() {
+	return func() {
+		log := service.Logger{Stream: s.stream}
+		pb.RegisterLogStreamerServer(s.grpcServer, log)
+	}
+}
+
 // Shutdown gracefully stops log streamer from serving
 func (s *LogStreamer) Shutdown() {
 	s.stopAll <- struct{}{}
 	fmt.Printf("\n%s [INFO] initializing shut down, please wait.\n",
-		printTime(logLayout))
+		ftime.PrintTime(logLayout))
 	s.stopGrpc <- struct{}{}
 	s.stopTicker <- struct{}{}
 	s.ticker.Stop()
 	time.Sleep(1 * time.Second)
 	fmt.Printf("%s [INFO] Log streamer handled %d requests during %v\n",
-		printTime(logLayout), s.counter, time.Since(s.startTime))
-	fmt.Printf("%s [INFO] Log streamer shut down\n", printTime(logLayout))
+		ftime.PrintTime(logLayout), s.counter, time.Since(s.startTime))
+	fmt.Printf("%s [INFO] Log streamer shut down\n", ftime.PrintTime(logLayout))
 }
 
 func (s *LogStreamer) tickerServ() {
 	for _ = range s.ticker.C {
 		select {
 		case <-s.stopTicker:
-			fmt.Printf("\n%s [INFO] Ticker is stopping...\n", printTime(logLayout))
+			fmt.Printf("\n%s [INFO] Ticker is stopping...\n", ftime.PrintTime(logLayout))
 			return
 		default:
 			fmt.Printf("%s [INFO] Log Streamer handled %d requests, so far.\n",
-				printTime(logLayout), s.counter)
+				ftime.PrintTime(logLayout), s.counter)
 		}
 	}
 }
@@ -164,21 +137,4 @@ func handleIncomingRequest(rootPath, path, filename, line string, size int64) er
 		return fmt.Errorf("failed to write line: %v", err)
 	}
 	return nil
-}
-
-func server(stream chan pb.LogRequest, addr string, s *grpc.Server) {
-	lis, err := net.Listen("tcp", addr)
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
-
-	log := logger{stream}
-	pb.RegisterLogStreamerServer(s, log)
-
-	reflection.Register(s)
-	err = s.Serve(lis)
-	if err != nil {
-		fmt.Printf("failed to serve: %v", err)
-	}
-	fmt.Printf("\n%s [INFO] rpc server stopped\n", printTime(logLayout))
 }

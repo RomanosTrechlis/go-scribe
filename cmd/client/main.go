@@ -57,7 +57,7 @@ func main() {
 		})
 
 		// Create a connection with the TLS credentials
-		conn, err = grpc.Dial(":8080",
+		conn, err = grpc.Dial(":8000",
 			grpc.WithTransportCredentials(creds),
 			grpc.WithTimeout(1*time.Second))
 		if err != nil {
