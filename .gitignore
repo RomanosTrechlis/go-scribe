@@ -5,6 +5,3 @@ logs/
 
 cmd/logStreamer/logStreamer
 cmd/logMediator/logMediator
-
-log4j/log4j.iml
-log4j/target
