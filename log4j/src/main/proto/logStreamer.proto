@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package com.romanostrechlis.log4j.api;
+
+// service defines a new service names LogStreamer
+service LogStreamer {
+    // the LogStreamer service sends a LogRequest
+    // and recieves a LogResponse
+    rpc Log(LogRequest) returns (LogResponse) {}
+}
+
+// message is the structure that get serialized
+// the numbered fields are necessary for the serialization.
+// LogRequest is the structure that gets serialized
+// and then sent to rpc server.
+message LogRequest {
+    string filename = 1;
+    string path = 2;
+    string line = 3;
+}
+
+// LogResponse is the reply from rpc server
+message LogResponse {
+    string res = 1;
+}
