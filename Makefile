@@ -1,5 +1,5 @@
 PROJECT = logStreamer
-GITHUB = /home/romanos/GO/src/github.com/RomanosTrechlis
+GITHUB = /home/romanos/go/src/github.com/RomanosTrechlis
 PROJECT_DIR = ${GITHUB}/${PROJECT}
 LOG_STREAMER_CMD = ${PROJECT_DIR}/cmd/${PROJECT}
 MEDIATOR = ${PROJECT_DIR}/cmd/logMediator
@@ -7,7 +7,7 @@ STREAMER = ${PROJECT_DIR}/streamer
 API = ${PROJECT_DIR}/api
 CERT = ${PROJECT_DIR}/certs
 
-GRPC_JAVA_PLUGIN = /home/romanos/GO/bin/protoc-gen-grpc-java
+GRPC_JAVA_PLUGIN = /home/romanos/go/bin/protoc-gen-grpc-java
 
 dirs:
 	echo PROJECT_NAME = ${PROJECT}
@@ -102,3 +102,10 @@ cstrap:
 	mv ${CERT}/127.0.0.1.crt ${CERT}/client.crt
 	mv ${CERT}/127.0.0.1.key ${CERT}/client.key
 	mv ${CERT}/127.0.0.1.csr ${CERT}/client.csr
+
+# install dependencies
+deps:
+	go get google.golang.org/grpc
+	go get google.golang.org/grpc/credentials
+	go get google.golang.org/grpc/reflection
+	go get github.com/golang/protobuf/proto
