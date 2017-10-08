@@ -17,6 +17,7 @@ import (
 	pb "github.com/RomanosTrechlis/logStreamer/api"
 	"github.com/RomanosTrechlis/logStreamer/profiling"
 	"github.com/RomanosTrechlis/logStreamer/streamer"
+	"github.com/rs/xid"
 	"google.golang.org/grpc"
 
 	p "github.com/RomanosTrechlis/logStreamer/util/format/print"
@@ -93,7 +94,7 @@ func main() {
 
 		c := pb.NewRegisterClient(conn)
 		req := &pb.RegisterRequest{
-			Id:   "123456",
+			Id:   xid.New().String(),
 			Addr: fmt.Sprintf(":%d", port),
 		}
 		var retries = 3
