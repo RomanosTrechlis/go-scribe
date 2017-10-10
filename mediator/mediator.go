@@ -61,10 +61,12 @@ func (m *Mediator) ServiceHandler(stop chan struct{}) {
 	for {
 		select {
 		case req := <-m.stream:
-			conn, ok := m.streamersCon["123456"]
-			if !ok {
-				continue
+			var conn *grpc.ClientConn
+			for _, v := range m.streamersCon {
+				conn = v
+				break
 			}
+
 			client := pb.NewLogStreamerClient(conn)
 			client.Log(context.Background(), &req)
 			m.counter++
