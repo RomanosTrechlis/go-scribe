@@ -114,8 +114,7 @@ deps:
 
 # docker, is not ready yet
 dockerBuildStreamer:
-	cd ${LOG_STREAMER_CMD} && \
-	docker build -t romanos/streamer .
+	docker build -f cmd/logStreamer/Dockerfile -t romanos/streamer cmd/logStreamer/
 
 dockerRunStreamer:
-	docker run -it --rm -v /home/romanos/go/src/github.com/RomanosTrechlis/logStreamer:/romanos --name streamer-service romanos/streamer -p 8080:8080 -p 1000:1111
+	docker run -it --rm -v ${PWD}/logs:/logs --name streamer-service romanos/streamer -p 8080:8080 -p 1000:1111

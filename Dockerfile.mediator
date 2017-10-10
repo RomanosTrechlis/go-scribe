@@ -1,0 +1,11 @@
+FROM alpine:latest
+
+LABEL Romanos Trechlis "r.trechlis@gmail.com"
+
+COPY logMediator /usr/local/bin/logMediator
+
+WORKDIR /logs
+
+ENTRYPOINT ["logMediator"]
+
+EXPOSE 8080 1111

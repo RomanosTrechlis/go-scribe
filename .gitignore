@@ -7,3 +7,5 @@ cmd/logStreamer/logStreamer
 cmd/logMediator/logMediator
 cmd/path
 cmd/logStreamer/vendor
+
+streamer.tar
