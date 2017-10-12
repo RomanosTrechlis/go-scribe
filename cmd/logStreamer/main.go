@@ -71,6 +71,47 @@ func init() {
 	infoBlock(port, pport, maxSize, rootPath, pprofInfo)
 }
 
+func addMediator() {
+	conn, err := grpc.Dial(mediator,
+		grpc.WithInsecure(),
+		grpc.WithTimeout(1*time.Second))
+	if err != nil {
+		log.Fatalf("did not connect: %v", err)
+	}
+	defer conn.Close()
+
+	c := pb.NewRegisterClient(conn)
+	host, err := os.Hostname()
+	if err != nil {
+		return
+	}
+	req := &pb.RegisterRequest{
+		Id:   xid.New().String(),
+		Addr: fmt.Sprintf("%s:%d", host, port),
+	}
+	var retries = 3
+	var success = false
+	for retries > 0 {
+		r, err := c.Register(context.Background(), req)
+		if err != nil {
+			retries--
+			continue
+		}
+		if r.GetRes() != "Success" {
+			retries--
+			continue
+		}
+		success = true
+		break
+	}
+	if !success {
+		fmt.Fprintf(os.Stderr, "failed to register streamer to mediator '%s'", mediator)
+		os.Exit(2)
+	}
+
+	p.Print("Successfully registered to mediator")
+}
+
 func main() {
 	// validate path passed
 	if err := streamer.CheckPath(rootPath); err != nil {
@@ -84,40 +125,7 @@ func main() {
 
 	// register to mediator
 	if mediator != "" {
-		conn, err := grpc.Dial(mediator,
-			grpc.WithInsecure(),
-			grpc.WithTimeout(1*time.Second))
-		if err != nil {
-			log.Fatalf("did not connect: %v", err)
-		}
-		defer conn.Close()
-
-		c := pb.NewRegisterClient(conn)
-		req := &pb.RegisterRequest{
-			Id:   xid.New().String(),
-			Addr: fmt.Sprintf(":%d", port),
-		}
-		var retries = 3
-		var success = false
-		for retries > 0 {
-			r, err := c.Register(context.Background(), req)
-			if err != nil {
-				retries--
-				continue
-			}
-			if r.GetRes() != "Success" {
-				retries--
-				continue
-			}
-			success = true
-			break
-		}
-		if !success {
-			fmt.Fprintf(os.Stderr, "failed to register streamer to mediator '%s'", mediator)
-			os.Exit(2)
-		}
-
-		p.Print("Successfully registered to mediator")
+		addMediator()
 	}
 
 	s, err := streamer.New(rootPath, port, maxSize, mediator, cert, key, ca)
@@ -131,8 +139,8 @@ func main() {
 	var srv *http.Server
 	if pprofInfo {
 		srv = profiling.Serve(pport)
+		defer srv.Shutdown(nil)
 	}
-	defer srv.Shutdown(nil)
 
 	<-stopAll
 }

@@ -21,6 +21,12 @@ func New(crt, key, ca string) (*grpc.Server, error) {
 		return grpc.NewServer(), nil
 	}
 
+	// one way ssl
+	if crt != "" && key != "" && ca == "" {
+		// todo(romanos): yet to be implemented
+	}
+
+	// two way ssl
 	p.Print("Log streamer will start with TLS")
 	// Load the certifmediatoricates from disk
 	certificate, err := tls.LoadX509KeyPair(crt, key)
@@ -66,4 +72,14 @@ func Serve(register func(), addr string, s *grpc.Server) {
 		fmt.Printf("failed to serve: %v", err)
 	}
 	p.Print("RPC server stopped")
+}
+
+// GRPC holds info about the gRPC server.
+type GRPC struct {
+	// grpcServer
+	Server *grpc.Server
+	// GRPC server port
+	Port int
+	// stopGrpc waits for an empty struct to stop the rpc server.
+	Stop chan struct{}
 }

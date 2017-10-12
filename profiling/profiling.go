@@ -7,6 +7,7 @@ import (
 	"os"
 )
 
+// Serve serves a profiling web server.
 func Serve(port int) *http.Server {
 	srv := &http.Server{Addr: fmt.Sprintf(":%d", port)}
 

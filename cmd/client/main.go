@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"strings"
 	"time"
 
 	"golang.org/x/net/context"
@@ -23,9 +24,17 @@ const (
 )
 
 func main() {
+	var streamer string
 	sec := flag.Bool("s", false, "true for secure connection")
+	flag.StringVar(&streamer, "addr", ":8080", "streamer's address")
 	flag.Parse()
-	fmt.Println("test")
+
+	s := strings.Split(streamer, ":")
+	server := s[0]
+	port := ":" + s[1]
+	if server == "" {
+		server = "127.0.0.1"
+	}
 
 	var conn *grpc.ClientConn
 	if *sec {
@@ -51,13 +60,13 @@ func main() {
 		}
 
 		creds := credentials.NewTLS(&tls.Config{
-			ServerName:   "127.0.0.1", // NOTE: this is required!
+			ServerName:   server, // NOTE: this is required!
 			Certificates: []tls.Certificate{certificate},
 			RootCAs:      certPool,
 		})
 
 		// Create a connection with the TLS credentials
-		conn, err = grpc.Dial(":8000",
+		conn, err = grpc.Dial(server+port,
 			grpc.WithTransportCredentials(creds),
 			grpc.WithTimeout(1*time.Second))
 		if err != nil {
@@ -66,7 +75,7 @@ func main() {
 		defer conn.Close()
 	} else {
 		var err error
-		conn, err = grpc.Dial("172.17.0.2:8080",
+		conn, err = grpc.Dial(server+port,
 			grpc.WithInsecure(),
 			grpc.WithTimeout(1*time.Second))
 		if err != nil {

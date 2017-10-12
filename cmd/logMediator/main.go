@@ -47,7 +47,7 @@ func main() {
 	signal.Notify(stopAll, syscall.SIGTERM, syscall.SIGINT)
 
 	m, err := mediator.New(port, cert, key, ca)
-	if err != nil { // enable/disable pprof functionality
+	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to start a new mediator: %v", err)
 		os.Exit(2)
 	}
@@ -57,7 +57,7 @@ func main() {
 	var srv *http.Server
 	if pprofInfo {
 		srv = profiling.Serve(pport)
+		defer srv.Shutdown(nil)
 	}
-	defer srv.Shutdown(nil)
 	<-stopAll
 }

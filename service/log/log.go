@@ -15,10 +15,10 @@ type Logger struct {
 // Log is the ptotobuf service implementation
 func (l Logger) Log(ctx context.Context, in *pb.LogRequest) (*pb.LogResponse, error) {
 	l.Stream <- *in
-	return &pb.LogResponse{Res: "handling"}, nil
+	return &pb.LogResponse{Res: "true"}, nil
 }
 
 // GRPCService describes a method dealing with protobuf incoming requests
 type GRPCService interface {
-	ServiceHandler(stop chan struct{}, s *grpc.Server)
+	serviceHandler(stop chan struct{}, s *grpc.Server)
 }
