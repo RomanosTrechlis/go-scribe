@@ -21,9 +21,10 @@ import (
 type Mediator struct {
 	// mux protectes streamers and streamersCon
 	// while pinging subscribers.
-	mux          sync.Mutex
-	streamers    map[string]string
-	streamersCon map[string]*grpc.ClientConn
+	mux                  sync.Mutex
+	streamers            map[string]string
+	streamersCon         map[string]*grpc.ClientConn
+	streamResponsibility map[string]string
 
 	// input stream of protobuf requests
 	stream chan pb.LogRequest
@@ -48,8 +49,9 @@ func New(port int, crt, key, ca string) (*Mediator, error) {
 			Server: srv,
 			Port:   port,
 		},
-		streamersCon: make(map[string]*grpc.ClientConn),
-		streamers:    make(map[string]string),
+		streamersCon:         make(map[string]*grpc.ClientConn),
+		streamers:            make(map[string]string),
+		streamResponsibility: make(map[string]string),
 	}
 	return m, nil
 }
@@ -127,6 +129,33 @@ func (m *Mediator) pingSubscribers() {
 			continue
 		}
 		m.checkSubscriberAlive(streamer, addr)
+
+	}
+	m.reCalculateStreamerResponsibility()
+}
+
+// testing load balancing
+func (m *Mediator) reCalculateStreamerResponsibility() {
+	r := "abcdefghijklmnopqrstuvwxyz0123456789"
+	streamerNum := len(m.streamers)
+	if streamerNum == 0 {
+		return
+	}
+	rNum := 36
+
+	m.streamResponsibility = make(map[string]string)
+	mid := (rNum - 1) / streamerNum
+
+	val := mid
+	p.Print(fmt.Sprintf("slicing at %d with %s value and index of %d", val, r, rNum))
+	for s := range m.streamers {
+		p.Print(s)
+		m.streamResponsibility[string(r[val])] = s
+		val += mid
+	}
+
+	for k, v := range m.streamResponsibility {
+		p.Print(k + " " + v)
 	}
 }
 
