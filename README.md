@@ -1,31 +1,13 @@
 # Log Streamer
 
-Log Streamer is a server that handles logging from remote clients.
+Log Streamer consists of two project that are both based on protocol buffers and gRPC. The first is the Streamer and the second is the Mediator.
 
-Log Streamer uses protocol buffer and gRPC to communicate.
+## 1. Streamer
 
-## Usage
+The Streamer is the worker that writes log lines to files.
 
-**rootPath**: is the chosen path for saving logs
+#### Flags
 
-**port**: listening port
-
-**maxFileSize**: the maximum size of log files before the get stored (rename)
-
-**cert, key, ca**: if empty the server starts without TLS, else it starts with TLS
-
-```go
-s, err := streamer.New(rootPath, port, maxFileSize, cert, key, ca)
-if err != nil {
-  return
-}
-
-defer s.Shutdown()
-go s.Serve()
-```
-*NOTE*: shutting down the server is user's responsibility.  
-
-## Flags
 ```
 Usage of logStreamer:
   -ca string
@@ -34,6 +16,8 @@ Usage of logStreamer:
     	dumps log lines to console
   -crt string
     	host's certificate for secured connections
+  -mediator string
+    	mediators address if exists, i.e 127.0.0.1:8080
   -path string
     	path for logs to be persisted (default "../logs")
   -pk string
@@ -47,3 +31,41 @@ Usage of logStreamer:
   -size string
     	max size for individual files, -1B for infinite size (default "1MB")
 ```
+
+When the mediator flag has value of type host:port then the Streamer calls the Mediator and gets registered.
+
+## 2. Mediator
+
+The Mediator is used as a master node that balances requests for logging to the registered Streamers (workers).
+
+#### Flags
+```
+Usage of logMediator:
+  -ca string
+    	certificate authority's certificate
+  -crt string
+    	host's certificate for secured connections
+  -pk string
+    	host's private key
+  -port int
+    	port for mediator server to listen to requests (default 8000)
+  -pport int
+    	port for pprof server (default 1111)
+  -pprof
+    	additional server for pprof functionality
+```
+
+When Streamers begin to register, the Mediator starts keeping track of which of them are alive doing health checks every five (5) seconds.
+The Mediator also keeps track of which Streamer writes what file, in order to prevent two Streamers writing on the same file at the same time, resulting in a panic from one or both.
+
+## TODO
+
+1. right now there are two ways to connect to Streamers
+  * with an insecure connection (no SSL) or
+  * with a two-way SSL authentication requiring both the client and the Streamer to have SSL.
+
+  In the future, I will add a one-way SSL authentication for the Streamer only.
+1. add more flags for the Streamer and Mediator making them more parameterizable from cl.
+1. create a more robust algorithm for load balancing among the Streamers.
+1. investigate the use of sync.Map instead of sync.Mutex.
+1. keep refactoring.
