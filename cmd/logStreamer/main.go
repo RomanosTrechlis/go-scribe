@@ -46,7 +46,8 @@ func init() {
 	// enable/disable console dumps
 	flag.BoolVar(&console, "console", false, "dumps log lines to console")
 	// enable/disable cluster functionality
-	flag.StringVar(&mediator, "mediator", "", "mediators address if exists, i.e 127.0.0.1:8080")
+	flag.StringVar(&mediator, "mediator", "",
+		"mediators address if exists, i.e 127.0.0.1:8080")
 	// pprof port for http server
 	flag.IntVar(&pport, "pport", 1111, "port for pprof server")
 	// path must already exist
@@ -54,6 +55,8 @@ func init() {
 	// the size of log files before they get renamed for storing purposes.
 	size := flag.String("size", "1MB",
 		"max size for individual files, -1B for infinite size")
+
+	// certificate files
 	flag.StringVar(&cert, "crt", "", "host's certificate for secured connections")
 	flag.StringVar(&key, "pk", "", "host's private key")
 	flag.StringVar(&ca, "ca", "", "certificate authority's certificate")
@@ -86,7 +89,7 @@ func addMediator() {
 		return
 	}
 	req := &pb.RegisterRequest{
-		Id:   xid.New().String(),
+		Id:   id,
 		Addr: fmt.Sprintf("%s:%d", host, port),
 	}
 	var retries = 3
@@ -95,22 +98,31 @@ func addMediator() {
 		r, err := c.Register(context.Background(), req)
 		if err != nil {
 			retries--
+			p.Print(fmt.Sprintf("Failed to register to mediator '%s. "+
+				"Remaining tries: %d", mediator, retries))
+			time.Sleep(1 * time.Second)
 			continue
 		}
 		if r.GetRes() != "Success" {
 			retries--
+			p.Print(fmt.Sprintf("Failed to register to mediator '%s'. "+
+				"Remaining tries: %d", mediator, retries))
+			time.Sleep(2 * time.Second)
 			continue
 		}
 		success = true
 		break
 	}
 	if !success {
-		fmt.Fprintf(os.Stderr, "failed to register streamer to mediator '%s'", mediator)
+		fmt.Fprintf(os.Stderr, "failed to register streamer to mediator '%s'\n",
+			mediator)
 		os.Exit(2)
 	}
 
 	p.Print("Successfully registered to mediator")
 }
+
+var id string
 
 func main() {
 	// validate path passed
@@ -118,6 +130,9 @@ func main() {
 		fmt.Printf("path passed is not valid: %v\n", err)
 		return
 	}
+
+	id = xid.New().String()
+	p.Print(fmt.Sprintf("Streamer's id: %s", id))
 
 	// stopAll channel listens to termination and interupt signals.
 	stopAll := make(chan os.Signal, 1)

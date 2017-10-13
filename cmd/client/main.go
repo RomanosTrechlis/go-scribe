@@ -25,8 +25,10 @@ const (
 
 func main() {
 	var streamer string
+	var filename string
 	sec := flag.Bool("s", false, "true for secure connection")
 	flag.StringVar(&streamer, "addr", ":8080", "streamer's address")
+	flag.StringVar(&filename, "filename", "test", "filename to write the logs")
 	flag.Parse()
 
 	s := strings.Split(streamer, ":")
@@ -89,7 +91,7 @@ func main() {
 		i++
 		c := pb.NewLogStreamerClient(conn)
 		req := &pb.LogRequest{
-			Filename: "test",
+			Filename: filename,
 			Path:     "path",
 			Line:     fmt.Sprintf("%d: This is a test", i),
 		}

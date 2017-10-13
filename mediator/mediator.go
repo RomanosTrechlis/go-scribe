@@ -3,6 +3,7 @@ package mediator
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 	"sync"
 	"time"
 
@@ -21,15 +22,24 @@ import (
 type Mediator struct {
 	// mux protectes streamers and streamersCon
 	// while pinging subscribers.
-	mux                  sync.Mutex
-	streamers            map[string]string
-	streamersCon         map[string]*grpc.ClientConn
+	mux sync.Mutex
+	// streamers has as key the streamer id
+	// and value its address.
+	streamers map[string]string
+	// streamersCon has as key the streamer id
+	// and value a valid connection
+	streamersCon map[string]*grpc.ClientConn
+	// streamersCon has as key the streamer id
+	// and value a counter of requestts handled by that id.
+	streamersCounter map[string]int64
+	// streamResponsibility has as key a character
+	// and value a streamer id
 	streamResponsibility map[string]string
 
 	// input stream of protobuf requests
 	stream chan pb.LogRequest
 
-	gserver.GRPC
+	gRPC gserver.GRPC
 
 	startTime time.Time
 	counter   int64
@@ -45,7 +55,7 @@ func New(port int, crt, key, ca string) (*Mediator, error) {
 
 	m := &Mediator{
 		stream: make(chan pb.LogRequest),
-		GRPC: gserver.GRPC{
+		gRPC: gserver.GRPC{
 			Server: srv,
 			Port:   port,
 		},
@@ -79,12 +89,12 @@ func (m *Mediator) serviceHandler(stop chan struct{}) {
 func (m *Mediator) Serve() {
 	p.Print("Log Mediator is starting...")
 	m.stopAll = make(chan struct{})
-	m.GRPC.Stop = make(chan struct{})
+	m.gRPC.Stop = make(chan struct{})
 	m.startTime = time.Now()
 
 	// for log service
-	go m.serviceHandler(m.GRPC.Stop)
-	go gserver.Serve(m.register(), fmt.Sprintf(":%d", m.GRPC.Port), m.GRPC.Server)
+	go m.serviceHandler(m.gRPC.Stop)
+	go gserver.Serve(m.register(), fmt.Sprintf(":%d", m.gRPC.Port), m.gRPC.Server)
 
 	go m.startPingingSubcribers()
 
@@ -95,7 +105,7 @@ func (m *Mediator) Serve() {
 func (m *Mediator) Shutdown() {
 	m.stopAll <- struct{}{}
 	p.Print("Initializing shut down, please wait.")
-	close(m.GRPC.Stop)
+	close(m.gRPC.Stop)
 	time.Sleep(1 * time.Second)
 	p.Print(fmt.Sprintf("Mediator handled %d requests during %v",
 		m.counter, time.Since(m.startTime)))
@@ -103,9 +113,15 @@ func (m *Mediator) Shutdown() {
 }
 
 func (m *Mediator) getConnection(s string) (*grpc.ClientConn, error) {
+	m.mux.Lock()
+	defer m.mux.Unlock()
 	var conn *grpc.ClientConn
-	for _, v := range m.streamersCon {
-		conn = v
+	for k, v := range m.streamResponsibility {
+		toCheck := strings.ToLower(string(s[0]))
+		if toCheck >= k {
+			return m.streamersCon[v], nil
+		}
+		conn = m.streamersCon[v]
 		break
 	}
 	return conn, nil
@@ -134,29 +150,27 @@ func (m *Mediator) pingSubscribers() {
 	m.reCalculateStreamerResponsibility()
 }
 
-// testing load balancing
+// load balancing
 func (m *Mediator) reCalculateStreamerResponsibility() {
 	r := "abcdefghijklmnopqrstuvwxyz0123456789"
 	streamerNum := len(m.streamers)
 	if streamerNum == 0 {
 		return
 	}
-	rNum := 36
+	rNum := len(r)
 
 	m.streamResponsibility = make(map[string]string)
 	mid := (rNum - 1) / streamerNum
 
 	val := mid
-	p.Print(fmt.Sprintf("slicing at %d with %s value and index of %d", val, r, rNum))
 	for s := range m.streamers {
 		p.Print(s)
 		m.streamResponsibility[string(r[val])] = s
-		val += mid
+		val += mid + 1
 	}
-
-	for k, v := range m.streamResponsibility {
-		p.Print(k + " " + v)
-	}
+	// for k, v := range m.streamResponsibility {
+	// 	p.Print(k + " " + v)
+	// }
 }
 
 func (m *Mediator) checkSubscriberConnection(key, val string) bool {
@@ -214,11 +228,11 @@ func (m *Mediator) register() func() {
 		l := &logServ.Logger{
 			Stream: m.stream,
 		}
-		pb.RegisterLogStreamerServer(m.GRPC.Server, l)
+		pb.RegisterLogStreamerServer(m.gRPC.Server, l)
 
 		med := &register.Register{
 			Subscribers: m.streamers,
 		}
-		pb.RegisterRegisterServer(m.GRPC.Server, med)
+		pb.RegisterRegisterServer(m.gRPC.Server, med)
 	}
 }

@@ -18,7 +18,7 @@ const (
 
 // logStreamer holds the servers and other relative information
 type logStreamer struct {
-	gserver.GRPC
+	gRPC gserver.GRPC
 	ticker
 
 	// input stream of protobuf requests
@@ -52,7 +52,7 @@ func New(root string, port int, fileSize int64, mediator, crt, key, ca string) (
 		return nil, fmt.Errorf("failed to create grpc server: %v", err)
 	}
 	return &logStreamer{
-		GRPC: gserver.GRPC{
+		gRPC: gserver.GRPC{
 			Server: srv,
 			Port:   port,
 			Stop:   make(chan struct{}),
@@ -92,10 +92,10 @@ func (s *logStreamer) Serve() {
 	s.stopAll = make(chan struct{})
 	s.startTime = time.Now()
 	// go func listens to stream and stop channels
-	go s.serviceHandler(s.GRPC.Stop)
+	go s.serviceHandler(s.gRPC.Stop)
 
 	// rpc server
-	go gserver.Serve(s.register(), fmt.Sprintf(":%d", s.GRPC.Port), s.GRPC.Server)
+	go gserver.Serve(s.register(), fmt.Sprintf(":%d", s.gRPC.Port), s.gRPC.Server)
 
 	// ticker
 	go s.tickerServ()
@@ -106,7 +106,7 @@ func (s *logStreamer) Serve() {
 func (s *logStreamer) Shutdown() {
 	s.stopAll <- struct{}{}
 	p.Print("Initializing shut down, please wait.")
-	close(s.GRPC.Stop)
+	close(s.gRPC.Stop)
 	close(s.ticker.stop)
 	s.ticker.ticker.Stop()
 	time.Sleep(1 * time.Second)
@@ -129,11 +129,11 @@ func (s *logStreamer) tickerServ() {
 func (s *logStreamer) register() func() {
 	return func() {
 		log := logServ.Logger{Stream: s.stream}
-		pb.RegisterLogStreamerServer(s.GRPC.Server, log)
+		pb.RegisterLogStreamerServer(s.gRPC.Server, log)
 
 		if s.mediator != "" {
 			p := &ping.Pinger{}
-			pb.RegisterPingerServer(s.GRPC.Server, p)
+			pb.RegisterPingerServer(s.gRPC.Server, p)
 		}
 	}
 }
