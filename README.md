@@ -60,11 +60,9 @@ The Mediator also keeps track of which Streamer writes what file, in order to pr
 
 ## TODO
 
-1. right now there are two ways to connect to Streamers
-  * with an insecure connection (no SSL) or
-  * with a two-way SSL authentication requiring both the client and the Streamer to have SSL.
-
-  In the future, I will add a one-way SSL authentication for the Streamer only.
+1. add a one-way SSL authentication for the Streamer (or Mediator) only, in addition to the two ways already implemented:
+  * an insecure connection (no SSL) and
+  * a two-way SSL authentication requiring both the client and the Streamer to have SSL.
 1. add more flags for the Streamer and Mediator making them more parameterizable from cl.
 1. create a more robust algorithm for load balancing among the Streamers.
 1. investigate the use of sync.Map instead of sync.Mutex.
