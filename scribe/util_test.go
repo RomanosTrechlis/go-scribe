@@ -1,4 +1,4 @@
-package streamer
+package scribe
 
 import "testing"
 

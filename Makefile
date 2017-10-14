@@ -1,7 +1,7 @@
-PROJECT = logStreamer
+PROJECT = logScribe
 GITHUB = /home/romanos/go/src/github.com/RomanosTrechlis
 PROJECT_DIR = ${GITHUB}/${PROJECT}
-LOG_STREAMER_CMD = ${PROJECT_DIR}/cmd/${PROJECT}
+LOG_SCRIBE_CMD = ${PROJECT_DIR}/cmd/${PROJECT}
 MEDIATOR = ${PROJECT_DIR}/cmd/logMediator
 STREAMER = ${PROJECT_DIR}/streamer
 API = ${PROJECT_DIR}/api
@@ -13,23 +13,23 @@ dirs:
 	echo PROJECT_NAME = ${PROJECT}
 	echo GITHUB = ${GITHUB}
 	echo PROJECT_DIR = ${PROJECT_DIR}
-	echo LOG_STREAMER_CMD = ${LOG_STREAMER_CMD}
+	echo LOG_SCRIBE_CMD = ${LOG_SCRIBE_CMD}
 	echo STREAMER = ${STREAMER}
 
 test:
 	cd ${STREAMER} && go test -v && cd ${PROJECT_DIR}
 
 clean:
-	if test -f  ${LOG_STREAMER_CMD}/logStreamer; \
-	then rm -rf ${LOG_STREAMER_CMD}/logStreamer; \
+	if test -f  ${LOG_SCRIBE_CMD}/logScribe; \
+	then rm -rf ${LOG_SCRIBE_CMD}/logScribe; \
 	else echo "file doesn't exist. nothing to do"; \
 	fi
 	if test -f  ${MEDIATOR}/logMediator; \
 	then rm -rf ${MEDIATOR}/logMediator; \
 	else echo "file doesn't exist. nothing to do"; \
 	fi
-	if test -f  ${LOG_STREAMER_CMD}/logStreamer.exe; \
-	then rm -rf ${LOG_STREAMER_CMD}/logStreamer.exe; \
+	if test -f  ${LOG_SCRIBE_CMD}/logScribe.exe; \
+	then rm -rf ${LOG_SCRIBE_CMD}/logScribe.exe; \
 	else echo "file doesn't exist. nothing to do"; \
 	fi
 	if test -f  ${STREAMER}/file.txt; \
@@ -48,7 +48,7 @@ clean:
 	echo "everything is clean"
 
 buildStreamer:
-	cd ${LOG_STREAMER_CMD} && go build && cd ${PROJECT_DIR}
+	cd ${LOG_SCRIBE_CMD} && go build && cd ${PROJECT_DIR}
 
 buildMediator:
 	cd ${MEDIATOR} && go build && cd ${PROJECT_DIR}
@@ -56,13 +56,13 @@ buildMediator:
 build: clean test buildStreamer buildMediator
 
 runStreamer:
-	${LOG_STREAMER_CMD}/logStreamer -path logs -pprof
+	${LOG_SCRIBE_CMD}/logScribe -path logs -pprof
 
 runMediator:
 	${MEDIATOR}/logMediator -pprof -pport 1122
 
 secRun:
-	${LOG_STREAMER_CMD}/logStreamer -path logs -pprof -crt ${CERT}/server.crt \
+	${LOG_SCRIBE_CMD}/logScribe -path logs -pprof -crt ${CERT}/server.crt \
 		-pk ${CERT}/server.key -ca ${CERT}/CertAuth.crt
 
 all: build runStreamer
@@ -114,7 +114,7 @@ deps:
 
 # docker, is not ready yet
 dockerBuildStreamer:
-	docker build -f cmd/logStreamer/Dockerfile -t romanos/streamer cmd/logStreamer/
+	docker build -f cmd/logScribe/Dockerfile -t romanos/streamer cmd/logScribe/
 
 dockerRunStreamer:
 	docker run -it --rm -v ${PWD}/logs:/logs --name streamer-service romanos/streamer -p 8080:8080 -p 1000:1111

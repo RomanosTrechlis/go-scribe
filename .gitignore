@@ -3,9 +3,6 @@ logs/
 
 **/*.exe
 
-cmd/logStreamer/logStreamer
+cmd/logScribe/logScribe
 cmd/logMediator/logMediator
 cmd/path
-cmd/logStreamer/vendor
-
-streamer.tar

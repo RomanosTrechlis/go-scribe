@@ -1,4 +1,4 @@
-package streamer
+package scribe
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/RomanosTrechlis/logStreamer/util/format/time"
+	"github.com/RomanosTrechlis/logScribe/util/format/time"
 )
 
 // CheckPath checks the validity of a given path

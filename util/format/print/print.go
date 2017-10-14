@@ -3,7 +3,7 @@ package print
 import (
 	"fmt"
 
-	t "github.com/RomanosTrechlis/logStreamer/util/format/time"
+	t "github.com/RomanosTrechlis/logScribe/util/format/time"
 )
 
 const (

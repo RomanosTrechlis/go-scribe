@@ -1,11 +1,11 @@
-package streamer
+package scribe
 
 import (
 	"os"
 	"testing"
 	"time"
 
-	pb "github.com/RomanosTrechlis/logStreamer/api"
+	pb "github.com/RomanosTrechlis/logScribe/api"
 )
 
 // mockStat is a dummy implementation of FileInfo returned by Stat and Lstat.

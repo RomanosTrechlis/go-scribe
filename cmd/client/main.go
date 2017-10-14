@@ -12,7 +12,7 @@ import (
 
 	"golang.org/x/net/context"
 
-	pb "github.com/RomanosTrechlis/logStreamer/api"
+	pb "github.com/RomanosTrechlis/logScribe/api"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -24,14 +24,14 @@ const (
 )
 
 func main() {
-	var streamer string
+	var scribe string
 	var filename string
 	sec := flag.Bool("s", false, "true for secure connection")
-	flag.StringVar(&streamer, "addr", ":8080", "streamer's address")
+	flag.StringVar(&scribe, "addr", ":8080", "scribe's address")
 	flag.StringVar(&filename, "filename", "test", "filename to write the logs")
 	flag.Parse()
 
-	s := strings.Split(streamer, ":")
+	s := strings.Split(scribe, ":")
 	server := s[0]
 	port := ":" + s[1]
 	if server == "" {
@@ -89,7 +89,7 @@ func main() {
 	var i int
 	for {
 		i++
-		c := pb.NewLogStreamerClient(conn)
+		c := pb.NewLogScribeClient(conn)
 		req := &pb.LogRequest{
 			Filename: filename,
 			Path:     "path",

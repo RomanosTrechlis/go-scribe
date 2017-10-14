@@ -3,7 +3,7 @@ package ping
 import (
 	"context"
 
-	pb "github.com/RomanosTrechlis/logStreamer/api"
+	pb "github.com/RomanosTrechlis/logScribe/api"
 )
 
 // Pinger holds a function that deals with incoming pings

@@ -2,9 +2,9 @@ syntax = "proto3";
 
 package api;
 
-// service defines a new service names LogStreamer
-service LogStreamer {
-  // the LogStreamer service sends a LogRequest
+// service defines a new service names LogScribe
+service LogScribe {
+  // the LogScribe service sends a LogRequest
   // and recieves a LogResponse
   rpc Log(LogRequest) returns (LogResponse) {}
 }

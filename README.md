@@ -1,15 +1,15 @@
-# Log Streamer
+# Log Scribe
 
-Log Streamer consists of two project that are both based on protocol buffers and gRPC. The first is the Streamer and the second is the Mediator.
+Log Scribe consists of two project that are both based on protocol buffers and gRPC. The first is the Scribe and the second is the Mediator.
 
-## 1. Streamer
+## 1. Scribe
 
-The Streamer is the worker that writes log lines to files.
+The Scribe is the worker that writes log lines to files.
 
 #### Flags
 
 ```
-Usage of logStreamer:
+Usage of logScribe:
   -ca string
     	certificate authority's certificate
   -console
@@ -32,11 +32,11 @@ Usage of logStreamer:
     	max size for individual files, -1B for infinite size (default "1MB")
 ```
 
-When the mediator flag has value of type host:port then the Streamer calls the Mediator and gets registered.
+When the mediator flag has value of type host:port then the Scribe calls the Mediator and gets registered.
 
 ## 2. Mediator
 
-The Mediator is used as a master node that balances requests for logging to the registered Streamers (workers).
+The Mediator is used as a master node that balances requests for logging to the registered Scribes (workers).
 
 #### Flags
 ```
@@ -55,17 +55,17 @@ Usage of logMediator:
     	additional server for pprof functionality
 ```
 
-When Streamers begin to register, the Mediator starts keeping track of which of them are alive doing health checks every five (5) seconds.
-The Mediator also keeps track of which Streamer writes what file, in order to prevent two Streamers writing on the same file at the same time, resulting in a panic from one or both.
+When Scribes begin to register, the Mediator starts keeping track of which of them are alive doing health checks every five (5) seconds.
+The Mediator also keeps track of which Scribe writes what file, in order to prevent two Scribes writing on the same file at the same time, resulting in a panic from one or both.
 
 ## TODO
 
-1. add a one-way SSL authentication for the Streamer (or Mediator) only, in addition to the two ways already implemented:
+1. add a one-way SSL authentication for the Scribe (or Mediator) only, in addition to the two ways already implemented:
 
     * an insecure connection (no SSL) and
-    * a two-way SSL authentication requiring both the client and the Streamer to have SSL.
+    * a two-way SSL authentication requiring both the client and the Scribe to have SSL.
 
-1. add more flags for the Streamer and Mediator making them more parameterizable from cl.
-1. create a more robust algorithm for load balancing among the Streamers.
+1. add more flags for the Scribe and Mediator making them more parameterizable from cl.
+1. create a more robust algorithm for load balancing among the Scribes.
 1. investigate the use of sync.Map instead of sync.Mutex.
 1. keep refactoring.

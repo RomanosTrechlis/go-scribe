@@ -14,13 +14,13 @@ import (
 
 	"net/http"
 
-	pb "github.com/RomanosTrechlis/logStreamer/api"
-	"github.com/RomanosTrechlis/logStreamer/profiling"
-	"github.com/RomanosTrechlis/logStreamer/streamer"
+	pb "github.com/RomanosTrechlis/logScribe/api"
+	"github.com/RomanosTrechlis/logScribe/profiling"
+	"github.com/RomanosTrechlis/logScribe/scribe"
 	"github.com/rs/xid"
 	"google.golang.org/grpc"
 
-	p "github.com/RomanosTrechlis/logStreamer/util/format/print"
+	p "github.com/RomanosTrechlis/logScribe/util/format/print"
 )
 
 var (
@@ -62,7 +62,7 @@ func init() {
 	flag.StringVar(&ca, "ca", "", "certificate authority's certificate")
 	flag.Parse()
 
-	i, err := streamer.LexicalToNumber(*size)
+	i, err := scribe.LexicalToNumber(*size)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "couldn't parse size input to bytes: %v", err)
 		os.Exit(2)
@@ -114,7 +114,7 @@ func addMediator() {
 		break
 	}
 	if !success {
-		fmt.Fprintf(os.Stderr, "failed to register streamer to mediator '%s'\n",
+		fmt.Fprintf(os.Stderr, "failed to register scribe to mediator '%s'\n",
 			mediator)
 		os.Exit(2)
 	}
@@ -126,13 +126,13 @@ var id string
 
 func main() {
 	// validate path passed
-	if err := streamer.CheckPath(rootPath); err != nil {
+	if err := scribe.CheckPath(rootPath); err != nil {
 		fmt.Printf("path passed is not valid: %v\n", err)
 		return
 	}
 
 	id = xid.New().String()
-	p.Print(fmt.Sprintf("Streamer's id: %s", id))
+	p.Print(fmt.Sprintf("Scribe's id: %s", id))
 
 	// stopAll channel listens to termination and interupt signals.
 	stopAll := make(chan os.Signal, 1)
@@ -143,7 +143,7 @@ func main() {
 		addMediator()
 	}
 
-	s, err := streamer.New(rootPath, port, maxSize, mediator, cert, key, ca)
+	s, err := scribe.New(rootPath, port, maxSize, mediator, cert, key, ca)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(2)

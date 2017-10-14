@@ -3,7 +3,7 @@ package log
 import (
 	"golang.org/x/net/context"
 
-	pb "github.com/RomanosTrechlis/logStreamer/api"
+	pb "github.com/RomanosTrechlis/logScribe/api"
 	"google.golang.org/grpc"
 )
 

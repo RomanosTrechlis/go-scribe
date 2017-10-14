@@ -9,32 +9,32 @@ import (
 
 	"golang.org/x/net/context"
 
-	pb "github.com/RomanosTrechlis/logStreamer/api"
-	logServ "github.com/RomanosTrechlis/logStreamer/service/log"
-	"github.com/RomanosTrechlis/logStreamer/service/register"
-	"github.com/RomanosTrechlis/logStreamer/util/gserver"
+	pb "github.com/RomanosTrechlis/logScribe/api"
+	logServ "github.com/RomanosTrechlis/logScribe/service/log"
+	"github.com/RomanosTrechlis/logScribe/service/register"
+	"github.com/RomanosTrechlis/logScribe/util/gserver"
 	"google.golang.org/grpc"
 
-	p "github.com/RomanosTrechlis/logStreamer/util/format/print"
+	p "github.com/RomanosTrechlis/logScribe/util/format/print"
 )
 
 // Mediator grpc server and other relative info
 type Mediator struct {
-	// mux protectes streamers and streamersCon
+	// mux protectes scribes and scribesCon
 	// while pinging subscribers.
 	mux sync.Mutex
-	// streamers has as key the streamer id
+	// scribes has as key the scribe id
 	// and value its address.
-	streamers map[string]string
-	// streamersCon has as key the streamer id
+	scribes map[string]string
+	// scribesCon has as key the scribe id
 	// and value a valid connection
-	streamersCon map[string]*grpc.ClientConn
-	// streamersCon has as key the streamer id
+	scribesCon map[string]*grpc.ClientConn
+	// scribesCon has as key the scribe id
 	// and value a counter of requestts handled by that id.
-	streamersCounter map[string]int64
+	scribesCounter map[string]int64
 	// streamResponsibility has as key a character
-	// and value a streamer id
-	streamResponsibility map[string]string
+	// and value a scribe id
+	scribeResponsibility map[string]string
 
 	// input stream of protobuf requests
 	stream chan pb.LogRequest
@@ -59,9 +59,9 @@ func New(port int, crt, key, ca string) (*Mediator, error) {
 			Server: srv,
 			Port:   port,
 		},
-		streamersCon:         make(map[string]*grpc.ClientConn),
-		streamers:            make(map[string]string),
-		streamResponsibility: make(map[string]string),
+		scribesCon:           make(map[string]*grpc.ClientConn),
+		scribes:              make(map[string]string),
+		scribeResponsibility: make(map[string]string),
 	}
 	return m, nil
 }
@@ -76,7 +76,7 @@ func (m *Mediator) serviceHandler(stop chan struct{}) {
 				p.Print(err.Error())
 			}
 
-			client := pb.NewLogStreamerClient(conn)
+			client := pb.NewLogScribeClient(conn)
 			client.Log(context.Background(), &req)
 			m.counter++
 		case <-stop:
@@ -116,12 +116,12 @@ func (m *Mediator) getConnection(s string) (*grpc.ClientConn, error) {
 	m.mux.Lock()
 	defer m.mux.Unlock()
 	var conn *grpc.ClientConn
-	for k, v := range m.streamResponsibility {
+	for k, v := range m.scribeResponsibility {
 		toCheck := strings.ToLower(string(s[0]))
 		if toCheck >= k {
-			return m.streamersCon[v], nil
+			return m.scribesCon[v], nil
 		}
-		conn = m.streamersCon[v]
+		conn = m.scribesCon[v]
 		break
 	}
 	return conn, nil
@@ -136,36 +136,36 @@ func (m *Mediator) startPingingSubcribers() {
 }
 
 func (m *Mediator) pingSubscribers() {
-	if len(m.streamers) == 0 {
+	if len(m.scribes) == 0 {
 		return
 	}
-	for streamer, addr := range m.streamers {
-		ok := m.checkSubscriberConnection(streamer, addr)
+	for scribe, addr := range m.scribes {
+		ok := m.checkSubscriberConnection(scribe, addr)
 		if ok {
 			continue
 		}
-		m.checkSubscriberAlive(streamer, addr)
+		m.checkSubscriberAlive(scribe, addr)
 
 	}
-	m.reCalculateStreamerResponsibility()
+	m.reCalculateScribeResponsibility()
 }
 
 // load balancing
-func (m *Mediator) reCalculateStreamerResponsibility() {
+func (m *Mediator) reCalculateScribeResponsibility() {
 	r := "abcdefghijklmnopqrstuvwxyz0123456789"
-	streamerNum := len(m.streamers)
-	if streamerNum == 0 {
+	scribeNum := len(m.scribes)
+	if scribeNum == 0 {
 		return
 	}
 	rNum := len(r)
 
-	m.streamResponsibility = make(map[string]string)
-	mid := (rNum - 1) / streamerNum
+	m.scribeResponsibility = make(map[string]string)
+	mid := (rNum - 1) / scribeNum
 
 	val := mid
-	for s := range m.streamers {
+	for s := range m.scribes {
 		p.Print(s)
-		m.streamResponsibility[string(r[val])] = s
+		m.scribeResponsibility[string(r[val])] = s
 		val += mid + 1
 	}
 	// for k, v := range m.streamResponsibility {
@@ -174,25 +174,25 @@ func (m *Mediator) reCalculateStreamerResponsibility() {
 }
 
 func (m *Mediator) checkSubscriberConnection(key, val string) bool {
-	if _, ok := m.streamersCon[key]; !ok {
+	if _, ok := m.scribesCon[key]; !ok {
 		conn, err := createConnection(val)
 		if err != nil {
-			delete(m.streamers, key)
-			delete(m.streamersCon, key)
-			p.Print(fmt.Sprintf("Deregistering streamer %s at %s", key, val))
+			delete(m.scribes, key)
+			delete(m.scribesCon, key)
+			p.Print(fmt.Sprintf("Deregistering scribe %s at %s", key, val))
 			return true
 		}
-		m.streamersCon[key] = conn
+		m.scribesCon[key] = conn
 		return true
 	}
 	return false
 }
 
 func (m *Mediator) checkSubscriberAlive(key, val string) {
-	if !m.isSubscriberAlive(m.streamersCon[key]) {
-		delete(m.streamers, key)
-		delete(m.streamersCon, key)
-		p.Print(fmt.Sprintf("Deregistering streamer %s at %s", key, val))
+	if !m.isSubscriberAlive(m.scribesCon[key]) {
+		delete(m.scribes, key)
+		delete(m.scribesCon, key)
+		p.Print(fmt.Sprintf("Deregistering scribe %s at %s", key, val))
 	}
 }
 
@@ -218,7 +218,7 @@ func createConnection(addr string) (*grpc.ClientConn, error) {
 		grpc.WithInsecure(),
 		grpc.WithTimeout(1*time.Second))
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to streamer: %v", err)
+		return nil, fmt.Errorf("failed to connect to scribe: %v", err)
 	}
 	return conn, nil
 }
@@ -228,10 +228,10 @@ func (m *Mediator) register() func() {
 		l := &logServ.Logger{
 			Stream: m.stream,
 		}
-		pb.RegisterLogStreamerServer(m.gRPC.Server, l)
+		pb.RegisterLogScribeServer(m.gRPC.Server, l)
 
 		med := &register.Register{
-			Subscribers: m.streamers,
+			Subscribers: m.scribes,
 		}
 		pb.RegisterRegisterServer(m.gRPC.Server, med)
 	}

@@ -10,8 +10,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/RomanosTrechlis/logStreamer/mediator"
-	"github.com/RomanosTrechlis/logStreamer/profiling"
+	"github.com/RomanosTrechlis/logScribe/mediator"
+	"github.com/RomanosTrechlis/logScribe/profiling"
 )
 
 var (
