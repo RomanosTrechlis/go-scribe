@@ -3,7 +3,7 @@ GITHUB = /home/romanos/go/src/github.com/RomanosTrechlis
 PROJECT_DIR = ${GITHUB}/${PROJECT}
 LOG_SCRIBE_CMD = ${PROJECT_DIR}/cmd/${PROJECT}
 MEDIATOR = ${PROJECT_DIR}/cmd/logMediator
-STREAMER = ${PROJECT_DIR}/streamer
+SCRIBE = ${PROJECT_DIR}/scribe
 API = ${PROJECT_DIR}/api
 CERT = ${PROJECT_DIR}/certs
 
@@ -14,10 +14,10 @@ dirs:
 	echo GITHUB = ${GITHUB}
 	echo PROJECT_DIR = ${PROJECT_DIR}
 	echo LOG_SCRIBE_CMD = ${LOG_SCRIBE_CMD}
-	echo STREAMER = ${STREAMER}
+	echo SCRIBE = ${SCRIBE}
 
 test:
-	cd ${STREAMER} && go test -v && cd ${PROJECT_DIR}
+	cd ${SCRIBE} && go test -v && cd ${PROJECT_DIR}
 
 clean:
 	if test -f  ${LOG_SCRIBE_CMD}/logScribe; \
@@ -32,30 +32,30 @@ clean:
 	then rm -rf ${LOG_SCRIBE_CMD}/logScribe.exe; \
 	else echo "file doesn't exist. nothing to do"; \
 	fi
-	if test -f  ${STREAMER}/file.txt; \
-	then rm -rf ${STREAMER}/file.txt; \
+	if test -f  ${SCRIBE}/file.txt; \
+	then rm -rf ${SCRIBE}/file.txt; \
 	else echo "file doesn't exist. nothing to do"; \
 	fi
-	if test -d  ${STREAMER}/testdata; \
-	then rm -rf ${STREAMER}/testdata; \
+	if test -d  ${SCRIBE}/testdata; \
+	then rm -rf ${SCRIBE}/testdata; \
 	else echo "file doesn't exist. nothing to do"; \
 	fi
-	if test -d  ${STREAMER}/noPath; \
-	then rm -rf ${STREAMER}/noPath; \
+	if test -d  ${SCRIBE}/noPath; \
+	then rm -rf ${SCRIBE}/noPath; \
 	else echo "file doesn't exist. nothing to do"; \
 	fi
 	#clear
 	echo "everything is clean"
 
-buildStreamer:
+buildScribe:
 	cd ${LOG_SCRIBE_CMD} && go build && cd ${PROJECT_DIR}
 
 buildMediator:
 	cd ${MEDIATOR} && go build && cd ${PROJECT_DIR}
 
-build: clean test buildStreamer buildMediator
+build: clean test buildScribe buildMediator
 
-runStreamer:
+runScribe:
 	${LOG_SCRIBE_CMD}/logScribe -path logs -pprof
 
 runMediator:
@@ -65,7 +65,7 @@ secRun:
 	${LOG_SCRIBE_CMD}/logScribe -path logs -pprof -crt ${CERT}/server.crt \
 		-pk ${CERT}/server.key -ca ${CERT}/CertAuth.crt
 
-all: build runStreamer
+all: build runScribe
 
 clearLogs:
 	rm -rf ${PROJECT_DIR}/logs
@@ -113,8 +113,8 @@ deps:
 
 
 # docker, is not ready yet
-dockerBuildStreamer:
-	docker build -f cmd/logScribe/Dockerfile -t romanos/streamer cmd/logScribe/
+dockerBuildScribe:
+	docker build -f cmd/logScribe/Dockerfile -t romanos/scribe cmd/logScribe/
 
-dockerRunStreamer:
-	docker run -it --rm -v ${PWD}/logs:/logs --name streamer-service romanos/streamer -p 8080:8080 -p 1000:1111
+dockerRunScribe:
+	docker run -it --rm -v ${PWD}/logs:/logs --name scribe-service romanos/scribe -p 8080:8080 -p 1000:1111
