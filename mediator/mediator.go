@@ -168,9 +168,6 @@ func (m *Mediator) reCalculateScribeResponsibility() {
 		m.scribeResponsibility[string(r[val])] = s
 		val += mid + 1
 	}
-	// for k, v := range m.streamResponsibility {
-	// 	p.Print(k + " " + v)
-	// }
 }
 
 func (m *Mediator) checkSubscriberConnection(key, val string) bool {
