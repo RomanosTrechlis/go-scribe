@@ -81,6 +81,7 @@ func (s *logScribe) serviceHandler(stop chan struct{}) {
 				return
 			}
 		case <-stop:
+			p.Print("serviceHandler stopped")
 			return
 		}
 	}
