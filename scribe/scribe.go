@@ -19,7 +19,6 @@ const (
 // logScribe holds the servers and other relative information
 type logScribe struct {
 	gRPC gserver.GRPC
-	ticker
 
 	// input stream of protobuf requests
 	stream chan pb.LogRequest
@@ -34,15 +33,8 @@ type logScribe struct {
 	rootPath string
 	// counter counts the requests handled by logScribe
 	counter int64
-	stopAll chan struct{}
-}
-
-// ticker is responsible for printing
-// status updates every few seconds
-type ticker struct {
-	ticker    *time.Ticker
-	stop      chan struct{}
 	startTime time.Time
+	stopAll chan struct{}
 }
 
 // New creates a Scribe struct
@@ -59,10 +51,6 @@ func New(root string, port int, fileSize int64, mediator, crt, key, ca string) (
 		},
 		stream:   make(chan pb.LogRequest),
 		fileSize: fileSize,
-		ticker: ticker{
-			ticker: time.NewTicker(20 * time.Second),
-			stop:   make(chan struct{}),
-		},
 		rootPath: root,
 		mediator: mediator,
 	}, nil
@@ -98,28 +86,25 @@ func (s *logScribe) Serve() {
 	// rpc server
 	go gserver.Serve(s.register(), fmt.Sprintf(":%d", s.gRPC.Port), s.gRPC.Server)
 
-	// ticker
-	go s.tickerServ()
 	<-s.stopAll
+	p.Print("gRPC server stopped.")
 }
 
 // Shutdown gracefully stops log Scribe from serving
 func (s *logScribe) Shutdown() {
-	s.stopAll <- struct{}{}
+	close(s.stopAll)
 	p.Print("Initializing shut down, please wait.")
 	close(s.gRPC.Stop)
-	close(s.ticker.stop)
-	s.ticker.ticker.Stop()
-	time.Sleep(1 * time.Second)
 	p.Print(fmt.Sprintf("Log Scribe handled %d requests during %v", s.counter, time.Since(s.startTime)))
 	p.Print("Log Scribe shut down")
 }
 
-func (s *logScribe) tickerServ() {
-	for _ = range s.ticker.ticker.C {
+// Tick prints a count of requests handled.
+func (s *logScribe) Tick(interval time.Duration) {
+	for _ = range time.Tick(interval * time.Second) {
 		select {
-		case <-s.ticker.stop:
-			p.Print("Ticker is stopping...")
+		case <-s.stopAll:
+			p.Print("Tick is stopping")
 			return
 		default:
 			p.Print(fmt.Sprintf("Log Scribe handled %d requests, so far.", s.counter))

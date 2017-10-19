@@ -29,6 +29,7 @@ var (
 	rootPath           string
 	maxSize            int64
 	mediator           string
+	verbose 		   bool
 )
 
 var (
@@ -38,23 +39,14 @@ var (
 )
 
 func init() {
-	// rpc server listening port
 	flag.IntVar(&port, "port", 8080, "port for server to listen to requests")
-	// enable/disable pprof functionality
-	flag.BoolVar(&pprofInfo, "pprof", false,
-		"additional server for pprof functionality")
-	// enable/disable console dumps
+	flag.BoolVar(&pprofInfo, "pprof", false, "additional server for pprof functionality")
 	flag.BoolVar(&console, "console", false, "dumps log lines to console")
-	// enable/disable cluster functionality
-	flag.StringVar(&mediator, "mediator", "",
-		"mediators address if exists, i.e 127.0.0.1:8080")
-	// pprof port for http server
+	flag.BoolVar(&verbose, "verbose", false, "prints regular handled request count")
+	flag.StringVar(&mediator, "mediator", "","mediators address if exists, i.e 127.0.0.1:8080")
 	flag.IntVar(&pport, "pport", 1111, "port for pprof server")
-	// path must already exist
 	flag.StringVar(&rootPath, "path", "../logs", "path for logs to be persisted")
-	// the size of log files before they get renamed for storing purposes.
-	size := flag.String("size", "1MB",
-		"max size for individual files, -1B for infinite size")
+	size := flag.String("size", "1MB", "max size for individual files, -1B for infinite size")
 
 	// certificate files
 	flag.StringVar(&cert, "crt", "", "host's certificate for secured connections")
@@ -155,6 +147,10 @@ func main() {
 	if pprofInfo {
 		srv = profiling.Serve(pport)
 		defer srv.Shutdown(nil)
+	}
+
+	if verbose {
+		go s.Tick(20)
 	}
 
 	<-stopAll
