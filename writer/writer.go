@@ -32,15 +32,19 @@ type builderImpl struct {
 	ca       string
 }
 
+// Builder interface holds the option methods
+// in order to create an RPCWriter.
 type Builder interface {
-	WithPath(path string)
-	WithFilename(filename string)
-	WithSecurity(cert, key, ca string)
+	WithPath(path string) Builder
+	WithFilename(filename string) Builder
+	WithSecurity(cert, key, ca string) Builder
 	Build() (*RPCWriter, error)
 }
 
+// NewBuilder creates a Builder interface with parameters
+// for the creation of RPCWriter when Build method gets called.
 func NewBuilder(address string, port int) Builder {
-	return &builderImpl{
+	return builderImpl{
 		address:  address,
 		port:     port,
 		path:     "temp",
@@ -48,21 +52,28 @@ func NewBuilder(address string, port int) Builder {
 	}
 }
 
-func (b *builderImpl) WithFilename(filename string) {
+// WithFilename adds a non default filename parameter to builder
+func (b builderImpl) WithFilename(filename string) Builder {
 	b.filename = filename
+	return b
 }
 
-func (b *builderImpl) WithPath(path string) {
+// WithPath adds a non default path parameter to builder
+func (b builderImpl) WithPath(path string) Builder {
 	b.path = path
+	return b
 }
 
-func (b *builderImpl) WithSecurity(cert, key, ca string) {
+// WithSecurity adds parameters necessary for ssl authentication
+func (b builderImpl) WithSecurity(cert, key, ca string) Builder {
 	b.ca = ca
 	b.cert = cert
 	b.key = key
+	return b
 }
 
-func (b *builderImpl) Build() (*RPCWriter, error) {
+// Build creates a new RPCWriter given the Builder parameters.
+func (b builderImpl) Build() (*RPCWriter, error) {
 	return New(b.path, b.filename, b.address, b.port, b.cert, b.key, b.ca)
 }
 
