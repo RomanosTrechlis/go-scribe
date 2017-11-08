@@ -22,6 +22,50 @@ type RPCWriter struct {
 	filename string
 }
 
+type builderImpl struct {
+	path     string
+	filename string
+	address  string
+	port     int
+	cert     string
+	key      string
+	ca       string
+}
+
+type Builder interface {
+	WithPath(path string)
+	WithFilename(filename string)
+	WithSecurity(cert, key, ca string)
+	Build() (*RPCWriter, error)
+}
+
+func NewBuilder(address string, port int) Builder {
+	return &builderImpl{
+		address:  address,
+		port:     port,
+		path:     "temp",
+		filename: "temporary",
+	}
+}
+
+func (b *builderImpl) WithFilename(filename string) {
+	b.filename = filename
+}
+
+func (b *builderImpl) WithPath(path string) {
+	b.path = path
+}
+
+func (b *builderImpl) WithSecurity(cert, key, ca string) {
+	b.ca = ca
+	b.cert = cert
+	b.key = key
+}
+
+func (b *builderImpl) Build() (*RPCWriter, error) {
+	return New(b.path, b.filename, b.address, b.port, b.cert, b.key, b.ca)
+}
+
 // New creates an RPCWriter
 func New(path, filename, address string, port int, cert, key, ca string) (*RPCWriter, error) {
 	s := scribe{
