@@ -2,8 +2,6 @@ PROJECT = go-scribe
 GITHUB = /home/romanos/go/src/github.com/RomanosTrechlis
 PROJECT_DIR = ${GITHUB}/${PROJECT}
 LOG_SCRIBE_CMD = ${PROJECT_DIR}/cmd/${PROJECT}
-MEDIATOR = ${PROJECT_DIR}/cmd/logMediator
-SCRIBE = ${PROJECT_DIR}/scribe
 API = ${PROJECT_DIR}/api
 CERT = ${PROJECT_DIR}/certs
 
@@ -20,18 +18,6 @@ test:
 	cd ${SCRIBE} && go test -v && cd ${PROJECT_DIR}
 
 clean:
-	if test -f  ${LOG_SCRIBE_CMD}/logScribe; \
-	then rm -rf ${LOG_SCRIBE_CMD}/logScribe; \
-	else echo "file doesn't exist. nothing to do"; \
-	fi
-	if test -f  ${MEDIATOR}/logMediator; \
-	then rm -rf ${MEDIATOR}/logMediator; \
-	else echo "file doesn't exist. nothing to do"; \
-	fi
-	if test -f  ${LOG_SCRIBE_CMD}/logScribe.exe; \
-	then rm -rf ${LOG_SCRIBE_CMD}/logScribe.exe; \
-	else echo "file doesn't exist. nothing to do"; \
-	fi
 	if test -f  ${SCRIBE}/file.txt; \
 	then rm -rf ${SCRIBE}/file.txt; \
 	else echo "file doesn't exist. nothing to do"; \
@@ -47,22 +33,17 @@ clean:
 	#clear
 	echo "everything is clean"
 
-buildScribe:
+build: clean test
 	cd ${LOG_SCRIBE_CMD} && go build && cd ${PROJECT_DIR}
 
-buildMediator:
-	cd ${MEDIATOR} && go build && cd ${PROJECT_DIR}
-
-build: clean test buildScribe buildMediator
-
 runScribe:
-	${LOG_SCRIBE_CMD}/logScribe -path logs -pprof
+	${LOG_SCRIBE_CMD}/go-scribe agent -path logs -pprof
 
 runMediator:
-	${MEDIATOR}/logMediator -pprof -pport 1122
+	${MEDIATOR}/go-scribe mediator -pprof -pport 1122
 
 secRun:
-	${LOG_SCRIBE_CMD}/logScribe -path logs -pprof -crt ${CERT}/server.crt \
+	${LOG_SCRIBE_CMD}/go-scribe agent -path logs -pprof -crt ${CERT}/server.crt \
 		-pk ${CERT}/server.key -ca ${CERT}/CertAuth.crt
 
 all: build runScribe
@@ -114,7 +95,7 @@ deps:
 
 # docker, is not ready yet
 dockerBuildScribe:
-	docker build -f cmd/logScribe/Dockerfile -t romanos/scribe cmd/logScribe/
+	docker build -f cmd/go-scribe/Dockerfile -t romanos/scribe cmd/go-scribe/
 
 dockerRunScribe:
 	docker run -it --rm -v ${PWD}/logs:/logs --name scribe-service romanos/scribe -p 8080:8080 -p 1000:1111
