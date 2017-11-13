@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	pb "github.com/RomanosTrechlis/logScribe/api"
+	pb "github.com/RomanosTrechlis/go-scribe/api"
 )
 
 // mockStat is a dummy implementation of FileInfo returned by Stat and Lstat.

@@ -3,6 +3,4 @@ logs/
 
 **/*.exe
 
-cmd/logScribe/logScribe
-cmd/logMediator/logMediator
 cmd/path

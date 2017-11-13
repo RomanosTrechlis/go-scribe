@@ -9,13 +9,13 @@ import (
 
 	"golang.org/x/net/context"
 
-	pb "github.com/RomanosTrechlis/logScribe/api"
-	logServ "github.com/RomanosTrechlis/logScribe/service/log"
-	"github.com/RomanosTrechlis/logScribe/service/register"
-	"github.com/RomanosTrechlis/logScribe/util/gserver"
+	pb "github.com/RomanosTrechlis/go-scribe/api"
+	logServ "github.com/RomanosTrechlis/go-scribe/service/log"
+	"github.com/RomanosTrechlis/go-scribe/service/register"
+	"github.com/RomanosTrechlis/go-scribe/util/gserver"
 	"google.golang.org/grpc"
 
-	p "github.com/RomanosTrechlis/logScribe/util/format/print"
+	p "github.com/RomanosTrechlis/go-scribe/util/format/print"
 )
 
 // Mediator grpc server and other relative info

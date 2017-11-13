@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
-	pb "github.com/RomanosTrechlis/logScribe/api"
+	pb "github.com/RomanosTrechlis/go-scribe/api"
 )
 
 // RPCWriter implements Writer interface

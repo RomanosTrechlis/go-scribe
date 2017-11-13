@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/RomanosTrechlis/logScribe/writer"
+	"github.com/RomanosTrechlis/go-scribe/writer"
 )
 
 func main() {

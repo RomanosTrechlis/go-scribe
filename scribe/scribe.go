@@ -5,11 +5,11 @@ import (
 	"sync"
 	"time"
 
-	pb "github.com/RomanosTrechlis/logScribe/api"
-	logServ "github.com/RomanosTrechlis/logScribe/service/log"
-	"github.com/RomanosTrechlis/logScribe/service/ping"
-	p "github.com/RomanosTrechlis/logScribe/util/format/print"
-	"github.com/RomanosTrechlis/logScribe/util/gserver"
+	pb "github.com/RomanosTrechlis/go-scribe/api"
+	logServ "github.com/RomanosTrechlis/go-scribe/service/log"
+	"github.com/RomanosTrechlis/go-scribe/service/ping"
+	p "github.com/RomanosTrechlis/go-scribe/util/format/print"
+	"github.com/RomanosTrechlis/go-scribe/util/gserver"
 )
 
 const (

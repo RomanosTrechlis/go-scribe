@@ -12,7 +12,7 @@ import (
 
 	"golang.org/x/net/context"
 
-	pb "github.com/RomanosTrechlis/logScribe/api"
+	pb "github.com/RomanosTrechlis/go-scribe/api"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )

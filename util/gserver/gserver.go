@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
 
-	p "github.com/RomanosTrechlis/logScribe/util/format/print"
+	p "github.com/RomanosTrechlis/go-scribe/util/format/print"
 )
 
 // New creates a grpc server with or without SSL

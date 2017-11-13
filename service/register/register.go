@@ -5,8 +5,8 @@ import (
 
 	"golang.org/x/net/context"
 
-	pb "github.com/RomanosTrechlis/logScribe/api"
-	p "github.com/RomanosTrechlis/logScribe/util/format/print"
+	pb "github.com/RomanosTrechlis/go-scribe/api"
+	p "github.com/RomanosTrechlis/go-scribe/util/format/print"
 )
 
 // Register holds the subscribers

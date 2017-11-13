@@ -1,4 +1,4 @@
-PROJECT = logScribe
+PROJECT = go-scribe
 GITHUB = /home/romanos/go/src/github.com/RomanosTrechlis
 PROJECT_DIR = ${GITHUB}/${PROJECT}
 LOG_SCRIBE_CMD = ${PROJECT_DIR}/cmd/${PROJECT}
