@@ -10,8 +10,7 @@ import (
 	"golang.org/x/net/context"
 
 	pb "github.com/RomanosTrechlis/go-scribe/api"
-	logServ "github.com/RomanosTrechlis/go-scribe/service/log"
-	"github.com/RomanosTrechlis/go-scribe/service/register"
+	"github.com/RomanosTrechlis/go-scribe/service"
 	"github.com/RomanosTrechlis/go-scribe/util/gserver"
 	"google.golang.org/grpc"
 
@@ -222,12 +221,12 @@ func createConnection(addr string) (*grpc.ClientConn, error) {
 
 func (m *Mediator) register() func() {
 	return func() {
-		l := &logServ.Logger{
+		l := &service.Logger{
 			Stream: m.stream,
 		}
 		pb.RegisterLogScribeServer(m.gRPC.Server, l)
 
-		med := &register.Register{
+		med := &service.Register{
 			Subscribers: m.scribes,
 		}
 		pb.RegisterRegisterServer(m.gRPC.Server, med)

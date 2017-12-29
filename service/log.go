@@ -1,4 +1,4 @@
-package log
+package service
 
 import (
 	"golang.org/x/net/context"

@@ -6,8 +6,7 @@ import (
 	"time"
 
 	pb "github.com/RomanosTrechlis/go-scribe/api"
-	logServ "github.com/RomanosTrechlis/go-scribe/service/log"
-	"github.com/RomanosTrechlis/go-scribe/service/ping"
+	"github.com/RomanosTrechlis/go-scribe/service"
 	p "github.com/RomanosTrechlis/go-scribe/util/format/print"
 	"github.com/RomanosTrechlis/go-scribe/util/gserver"
 	"google.golang.org/grpc"
@@ -137,11 +136,11 @@ func (s *LogScribe) serviceHandler(stop chan struct{}) {
 
 func (s *LogScribe) register() func() {
 	return func() {
-		log := logServ.Logger{Stream: s.stream}
+		log := service.Logger{Stream: s.stream}
 		pb.RegisterLogScribeServer(s.Server, log)
 
 		if s.mediator != "" {
-			pinger := &ping.Pinger{}
+			pinger := &service.Pinger{}
 			pb.RegisterPingerServer(s.Server, pinger)
 		}
 	}

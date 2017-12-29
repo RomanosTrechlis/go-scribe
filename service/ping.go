@@ -1,4 +1,4 @@
-package ping
+package service
 
 import (
 	"context"
