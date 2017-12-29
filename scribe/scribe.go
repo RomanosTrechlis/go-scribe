@@ -5,11 +5,14 @@ import (
 	"sync"
 	"time"
 
+	"gopkg.in/mgo.v2"
+
 	pb "github.com/RomanosTrechlis/go-scribe/api"
 	logServ "github.com/RomanosTrechlis/go-scribe/service/log"
 	"github.com/RomanosTrechlis/go-scribe/service/ping"
 	p "github.com/RomanosTrechlis/go-scribe/util/format/print"
 	"github.com/RomanosTrechlis/go-scribe/util/gserver"
+	"google.golang.org/grpc"
 )
 
 const (
@@ -18,24 +21,25 @@ const (
 
 // logScribe holds the servers and other relative information
 type logScribe struct {
-	gRPC gserver.GRPC
+	// target struct keeps info on where to write logs
+	target
+
+	// GRPC server
+	gserver.GRPC
 
 	// input stream of protobuf requests
 	stream chan pb.LogRequest
 
-	// maximum log file size
-	fileSize int64
-
 	// mediator is the address of the mediator middleware
 	mediator string
 
-	// rootPath keeps the initial logging path passed by the user
-	rootPath string
 	// counter counts the requests handled by logScribe
 	counter int64
 	startTime time.Time
 	stopAll chan struct{}
 }
+
+
 
 // New creates a Scribe struct
 func New(root string, port int, fileSize int64, mediator, crt, key, ca string) (*logScribe, error) {
@@ -43,16 +47,38 @@ func New(root string, port int, fileSize int64, mediator, crt, key, ca string) (
 	if err != nil {
 		return nil, fmt.Errorf("failed to create grpc server: %v", err)
 	}
+
+	t, err := NewTarget(false, true, "", "", root, fileSize)
+	if err != nil {
+		return nil, err
+	}
+
 	return &logScribe{
-		gRPC: gserver.GRPC{
+		target: *t,
+		GRPC: gserver.GRPC{
 			Server: srv,
 			Port:   port,
 			Stop:   make(chan struct{}),
 		},
 		stream:   make(chan pb.LogRequest),
-		fileSize: fileSize,
-		rootPath: root,
 		mediator: mediator,
+	}, nil
+}
+
+func NewScribe(port int, gServer *grpc.Server, isDB bool, dbServer, dbStore string) (*logScribe, error) {
+	t, err := NewTarget(true, false, dbServer, dbStore, "", 0)
+	if err != nil {
+		return nil, err
+	}
+
+	return &logScribe{
+		target: *t,
+		GRPC: gserver.GRPC{
+			Server: gServer,
+			Port:   port,
+			Stop:   make(chan struct{}),
+		},
+		stream:   make(chan pb.LogRequest),
 	}, nil
 }
 
@@ -81,10 +107,10 @@ func (s *logScribe) Serve() {
 	s.stopAll = make(chan struct{})
 	s.startTime = time.Now()
 	// go func listens to stream and stop channels
-	go s.serviceHandler(s.gRPC.Stop)
+	go s.serviceHandler(s.Stop)
 
 	// rpc server
-	go gserver.Serve(s.register(), fmt.Sprintf(":%d", s.gRPC.Port), s.gRPC.Server)
+	go gserver.Serve(s.register(), fmt.Sprintf(":%d", s.Port), s.Server)
 
 	<-s.stopAll
 	p.Print("gRPC server stopped.")
@@ -94,14 +120,14 @@ func (s *logScribe) Serve() {
 func (s *logScribe) Shutdown() {
 	close(s.stopAll)
 	p.Print("Initializing shut down, please wait.")
-	close(s.gRPC.Stop)
+	close(s.Stop)
 	p.Print(fmt.Sprintf("Log Scribe handled %d requests during %v", s.counter, time.Since(s.startTime)))
 	p.Print("Log Scribe shut down")
 }
 
 // Tick prints a count of requests handled.
 func (s *logScribe) Tick(interval time.Duration) {
-	for _ = range time.Tick(interval * time.Second) {
+	for range time.Tick(interval * time.Second) {
 		select {
 		case <-s.stopAll:
 			p.Print("Tick is stopping")
@@ -115,11 +141,11 @@ func (s *logScribe) Tick(interval time.Duration) {
 func (s *logScribe) register() func() {
 	return func() {
 		log := logServ.Logger{Stream: s.stream}
-		pb.RegisterLogScribeServer(s.gRPC.Server, log)
+		pb.RegisterLogScribeServer(s.Server, log)
 
 		if s.mediator != "" {
-			p := &ping.Pinger{}
-			pb.RegisterPingerServer(s.gRPC.Server, p)
+			pinger := &ping.Pinger{}
+			pb.RegisterPingerServer(s.Server, pinger)
 		}
 	}
 }
