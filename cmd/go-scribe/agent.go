@@ -78,11 +78,6 @@ func (cmd *agent) Register(fs *flag.FlagSet) {
 }
 
 func (cmd *agent) Run(ctx *ctx, args []string) error {
-	// validate path passed
-	if err := scribe.CheckPath(cmd.rootPath); err != nil {
-		return fmt.Errorf("path passed is not valid: %v\n", err)
-	}
-
 	printLogoAgent()
 
 	id := xid.New().String()
@@ -136,6 +131,11 @@ func (cmd *agent) createScribe() (*scribe.LogScribe, error) {
 			return nil, fmt.Errorf("failed to create scribe: %v", err)
 		}
 		return s, nil
+	}
+
+	// validate path passed
+	if err := scribe.CheckPath(cmd.rootPath); err != nil {
+		return nil, fmt.Errorf("path passed is not valid: %v\n", err)
 	}
 	maxSize, err := scribe.LexicalToNumber(cmd.size)
 	if err != nil {
