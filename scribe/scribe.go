@@ -62,8 +62,8 @@ func New(root string, port int, fileSize int64, mediator, crt, key, ca string) (
 	}, nil
 }
 
-func NewScribe(port int, gServer *grpc.Server, isDB bool, dbServer, dbStore string) (*logScribe, error) {
-	t, err := NewTarget(true, false, dbServer, dbStore, "", 0)
+func NewScribe(port int, gServer *grpc.Server, isDB bool, dbServer, dbStore, rootPath string, fileSize int64) (*logScribe, error) {
+	t, err := NewTarget(isDB, !isDB, dbServer, dbStore, rootPath, fileSize)
 	if err != nil {
 		return nil, err
 	}
