@@ -7,22 +7,20 @@ import (
 )
 
 type target struct {
-	isDB bool
-	databaseName string
-	session *mgo.Session
+	isDB         bool
+	database      *mgo.Database
 
-	isFile bool
+	isFile   bool
 	rootPath string
 	fileSize int64
 }
 
-func NewTarget(isDB, isFile bool, dbName, dbStore, root string, fileSize int64) (*target, error){
-	target := &target {
-		databaseName:dbStore,
-		isFile:isFile,
-		isDB:isDB,
-		rootPath:root,
-		fileSize:fileSize,
+func NewTarget(isDB, isFile bool, dbName, dbStore, root string, fileSize int64) (*target, error) {
+	target := &target{
+		isFile:       isFile,
+		isDB:         isDB,
+		rootPath:     root,
+		fileSize:     fileSize,
 	}
 
 	if isDB {
@@ -30,7 +28,8 @@ func NewTarget(isDB, isFile bool, dbName, dbStore, root string, fileSize int64) 
 		if err != nil {
 			return nil, fmt.Errorf("failed to dial database: %v", err)
 		}
-		target.session = s
+		database := s.DB(dbStore)
+		target.database = database
 	}
 
 	return target, nil

@@ -11,6 +11,7 @@ import (
 	p "github.com/RomanosTrechlis/go-scribe/util/format/print"
 	"github.com/RomanosTrechlis/go-scribe/util/gserver"
 	"google.golang.org/grpc"
+	"gopkg.in/mgo.v2"
 )
 
 const (
@@ -32,12 +33,10 @@ type logScribe struct {
 	mediator string
 
 	// counter counts the requests handled by logScribe
-	counter int64
+	counter   int64
 	startTime time.Time
-	stopAll chan struct{}
+	stopAll   chan struct{}
 }
-
-
 
 // New creates a Scribe struct
 func New(root string, port int, fileSize int64, mediator, crt, key, ca string) (*logScribe, error) {
@@ -76,27 +75,8 @@ func NewScribe(port int, gServer *grpc.Server, isDB bool, dbServer, dbStore stri
 			Port:   port,
 			Stop:   make(chan struct{}),
 		},
-		stream:   make(chan pb.LogRequest),
+		stream: make(chan pb.LogRequest),
 	}, nil
-}
-
-// serviceHandler implements the protobuf service
-func (s *logScribe) serviceHandler(stop chan struct{}) {
-	for {
-		select {
-		case req := <-s.stream:
-			s.counter++
-			err := handleIncomingRequest(s.rootPath, req.GetPath(),
-				req.GetFilename(), req.GetLine(), s.fileSize)
-			if err != nil {
-				fmt.Printf("hanldeIncomingRequest returned with error: %v", err)
-				return
-			}
-		case <-stop:
-			p.Print("serviceHandler stopped")
-			return
-		}
-	}
 }
 
 // Serve initializes log Scribe's servers
@@ -136,6 +116,24 @@ func (s *logScribe) Tick(interval time.Duration) {
 	}
 }
 
+// serviceHandler implements the protobuf service
+func (s *logScribe) serviceHandler(stop chan struct{}) {
+	for {
+		select {
+		case req := <-s.stream:
+			s.counter++
+			err := s.handleIncomingRequest(req)
+			if err != nil {
+				fmt.Printf("hanldeIncomingRequest returned with error: %v", err)
+				return
+			}
+		case <-stop:
+			p.Print("serviceHandler stopped")
+			return
+		}
+	}
+}
+
 func (s *logScribe) register() func() {
 	return func() {
 		log := logServ.Logger{Stream: s.stream}
@@ -148,12 +146,24 @@ func (s *logScribe) register() func() {
 	}
 }
 
-func handleIncomingRequest(rootPath, path, filename, line string, size int64) error {
+func (s *logScribe) handleIncomingRequest(r pb.LogRequest) error {
+	if s.isDB {
+		return handleDBRequest(s.database, r.Filename, r.Line)
+	}
+
 	var mu sync.RWMutex
+	return handleFileRequest(mu, s.rootPath, r.Path, r.Filename, r.Line, s.fileSize)
+}
+
+func handleFileRequest(mu sync.RWMutex, rootPath, path, filename, line string, size int64) error {
 	mu.Lock()
 	defer mu.Unlock()
 	if err := writeLine(rootPath, path, filename, line, size); err != nil {
 		return fmt.Errorf("failed to write line: %v", err)
 	}
-	return nil
+	return nilss
+}
+
+func handleDBRequest(db *mgo.Database, filename, line string) error {
+	return db.C(filename).Insert(line)
 }
