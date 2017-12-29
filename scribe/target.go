@@ -7,8 +7,8 @@ import (
 )
 
 type target struct {
-	isDB         bool
-	database      *mgo.Database
+	isDB     bool
+	database *mgo.Database
 
 	isFile   bool
 	rootPath string
@@ -17,10 +17,10 @@ type target struct {
 
 func NewTarget(isDB, isFile bool, dbName, dbStore, root string, fileSize int64) (*target, error) {
 	target := &target{
-		isFile:       isFile,
-		isDB:         isDB,
-		rootPath:     root,
-		fileSize:     fileSize,
+		isFile:   isFile,
+		isDB:     isDB,
+		rootPath: root,
+		fileSize: fileSize,
 	}
 
 	if isDB {

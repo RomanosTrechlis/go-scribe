@@ -46,8 +46,8 @@ type agent struct {
 	pport     int
 	rootPath  string
 	size      string
-	dbServer string
-	dbName string
+	dbServer  string
+	dbName    string
 
 	cert string
 	key  string
