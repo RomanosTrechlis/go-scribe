@@ -161,7 +161,7 @@ func handleFileRequest(mu sync.RWMutex, rootPath, path, filename, line string, s
 	if err := writeLine(rootPath, path, filename, line, size); err != nil {
 		return fmt.Errorf("failed to write line: %v", err)
 	}
-	return nilss
+	return nil
 }
 
 func handleDBRequest(db *mgo.Database, filename, line string) error {
