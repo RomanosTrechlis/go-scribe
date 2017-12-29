@@ -15,6 +15,7 @@ import (
 	"github.com/RomanosTrechlis/go-scribe/profiling"
 	"github.com/RomanosTrechlis/go-scribe/scribe"
 	p "github.com/RomanosTrechlis/go-scribe/util/format/print"
+	rpc "github.com/RomanosTrechlis/go-scribe/util/gserver"
 	"github.com/rs/xid"
 	"google.golang.org/grpc"
 )
@@ -45,6 +46,8 @@ type agent struct {
 	pport     int
 	rootPath  string
 	size      string
+	dbServer string
+	dbName string
 
 	cert string
 	key  string
@@ -66,6 +69,8 @@ func (cmd *agent) Register(fs *flag.FlagSet) {
 	fs.IntVar(&cmd.pport, "pport", 1111, "port for pprof server")
 	fs.StringVar(&cmd.rootPath, "path", "../logs", "path for logs to be persisted")
 	fs.StringVar(&cmd.size, "size", "1MB", "max size for individual files, -1B for infinite size")
+	fs.StringVar(&cmd.dbName, "dbName", "logs", "database name in the case the scribe writes on a database")
+	fs.StringVar(&cmd.dbServer, "dbServer", "", "database server for the scribe to write on it")
 	// certificate files
 	fs.StringVar(&cmd.cert, "crt", "", "host's certificate for secured connections")
 	fs.StringVar(&cmd.key, "pk", "", "host's private key")
@@ -78,13 +83,7 @@ func (cmd *agent) Run(ctx *ctx, args []string) error {
 		return fmt.Errorf("path passed is not valid: %v\n", err)
 	}
 
-	maxSize, err := scribe.LexicalToNumber(cmd.size)
-	if err != nil {
-		return fmt.Errorf("couldn't parse size input to bytes: %v", err)
-	}
-
 	printLogoAgent()
-	infoBlock(cmd.port, cmd.pport, maxSize, cmd.rootPath, cmd.pprofInfo)
 
 	id := xid.New().String()
 	p.Print(fmt.Sprintf("Scribe's id: %s", id))
@@ -101,11 +100,14 @@ func (cmd *agent) Run(ctx *ctx, args []string) error {
 		}
 	}
 
-	s, err := scribe.New(cmd.rootPath, cmd.port, maxSize, cmd.mediator, cmd.cert, cmd.key, cmd.ca)
+	s, err := cmd.createScribe()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
+		fmt.Fprintf(os.Stderr, "%v", err)
 		os.Exit(2)
 	}
+
+	cmd.infoBlock()
+
 	defer s.Shutdown()
 	go s.Serve()
 
@@ -121,6 +123,29 @@ func (cmd *agent) Run(ctx *ctx, args []string) error {
 
 	<-stopAll
 	return nil
+}
+
+func (cmd *agent) createScribe() (*scribe.LogScribe, error) {
+	if cmd.dbServer != "" && cmd.dbName != "" {
+		gRPC, err := rpc.New(cmd.cert, cmd.key, cmd.ca)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create a gRPC server: %v", err)
+		}
+		s, err := scribe.NewScribe(cmd.port, gRPC, true, cmd.dbServer, cmd.dbName, "", 0)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create scribe: %v", err)
+		}
+		return s, nil
+	}
+	maxSize, err := scribe.LexicalToNumber(cmd.size)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't parse size input to bytes: %v", err)
+	}
+	s, err := scribe.New(cmd.rootPath, cmd.port, maxSize, cmd.mediator, cmd.cert, cmd.key, cmd.ca)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create scribe: %v", err)
+	}
+	return s, nil
 }
 
 func (cmd *agent) addMediator(id string) error {
@@ -180,13 +205,19 @@ func printLogoAgent() {
 	fmt.Println("╚══════╝ ╚═════╝  ╚═════╝     ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝╚═════╝ ╚══════╝")
 }
 
-func infoBlock(port, pport int, maxSize int64, path string, pprofInfo bool) {
-	// info block
+func (cmd *agent) infoBlock() {
 	fmt.Println("##########################################################")
-	fmt.Println("\t==>\tPort number:\t", port)
-	fmt.Println("\t==>\tLog path:\t", path)
+	fmt.Println("\t==>\tPort number:\t", cmd.port)
+	if cmd.dbServer == "" && cmd.dbName == "" {
+		fmt.Println("\t==>\tLog path:\t", cmd.rootPath)
+	}
+	if cmd.dbServer != "" && cmd.dbName != "" {
+		fmt.Println("\t==>\tDatabase Server:\t", cmd.dbServer)
+		fmt.Println("\t==>\tDatabase Name:\t", cmd.dbName)
+	}
+	maxSize, _ := scribe.LexicalToNumber(cmd.size)
 	fmt.Println("\t==>\tLog size:\t", maxSize)
-	fmt.Println("\t==>\tPprof server:\t", pprofInfo)
-	fmt.Println("\t==>\tPprof port:\t", pport)
+	fmt.Println("\t==>\tPprof server:\t", cmd.pprofInfo)
+	fmt.Println("\t==>\tPprof port:\t", cmd.pport)
 	fmt.Println("##########################################################")
 }

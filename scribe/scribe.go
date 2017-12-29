@@ -18,8 +18,8 @@ const (
 	layout string = "02012006150405"
 )
 
-// logScribe holds the servers and other relative information
-type logScribe struct {
+// LogScribe holds the servers and other relative information
+type LogScribe struct {
 	// target struct keeps info on where to write logs
 	target
 
@@ -32,14 +32,14 @@ type logScribe struct {
 	// mediator is the address of the mediator middleware
 	mediator string
 
-	// counter counts the requests handled by logScribe
+	// counter counts the requests handled by LogScribe
 	counter   int64
 	startTime time.Time
 	stopAll   chan struct{}
 }
 
 // New creates a Scribe struct
-func New(root string, port int, fileSize int64, mediator, crt, key, ca string) (*logScribe, error) {
+func New(root string, port int, fileSize int64, mediator, crt, key, ca string) (*LogScribe, error) {
 	srv, err := gserver.New(crt, key, ca)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create grpc server: %v", err)
@@ -50,7 +50,7 @@ func New(root string, port int, fileSize int64, mediator, crt, key, ca string) (
 		return nil, err
 	}
 
-	return &logScribe{
+	return &LogScribe{
 		target: *t,
 		GRPC: gserver.GRPC{
 			Server: srv,
@@ -63,13 +63,13 @@ func New(root string, port int, fileSize int64, mediator, crt, key, ca string) (
 }
 
 // NewScribe returns a log scribe that can be parametrized to either write on files or a db.
-func NewScribe(port int, gServer *grpc.Server, isDB bool, dbServer, dbStore, rootPath string, fileSize int64) (*logScribe, error) {
+func NewScribe(port int, gServer *grpc.Server, isDB bool, dbServer, dbStore, rootPath string, fileSize int64) (*LogScribe, error) {
 	t, err := NewTarget(isDB, !isDB, dbServer, dbStore, rootPath, fileSize)
 	if err != nil {
 		return nil, err
 	}
 
-	return &logScribe{
+	return &LogScribe{
 		target: *t,
 		GRPC: gserver.GRPC{
 			Server: gServer,
@@ -81,7 +81,7 @@ func NewScribe(port int, gServer *grpc.Server, isDB bool, dbServer, dbStore, roo
 }
 
 // Serve initializes log Scribe's servers
-func (s *logScribe) Serve() {
+func (s *LogScribe) Serve() {
 	p.Print("Log Scribe is starting...")
 	s.stopAll = make(chan struct{})
 	s.startTime = time.Now()
@@ -96,7 +96,7 @@ func (s *logScribe) Serve() {
 }
 
 // Shutdown gracefully stops log Scribe from serving
-func (s *logScribe) Shutdown() {
+func (s *LogScribe) Shutdown() {
 	close(s.stopAll)
 	p.Print("Initializing shut down, please wait.")
 	close(s.Stop)
@@ -105,7 +105,7 @@ func (s *logScribe) Shutdown() {
 }
 
 // Tick prints a count of requests handled.
-func (s *logScribe) Tick(interval time.Duration) {
+func (s *LogScribe) Tick(interval time.Duration) {
 	for range time.Tick(interval * time.Second) {
 		select {
 		case <-s.stopAll:
@@ -118,7 +118,7 @@ func (s *logScribe) Tick(interval time.Duration) {
 }
 
 // serviceHandler implements the protobuf service
-func (s *logScribe) serviceHandler(stop chan struct{}) {
+func (s *LogScribe) serviceHandler(stop chan struct{}) {
 	for {
 		select {
 		case req := <-s.stream:
@@ -135,7 +135,7 @@ func (s *logScribe) serviceHandler(stop chan struct{}) {
 	}
 }
 
-func (s *logScribe) register() func() {
+func (s *LogScribe) register() func() {
 	return func() {
 		log := logServ.Logger{Stream: s.stream}
 		pb.RegisterLogScribeServer(s.Server, log)
@@ -147,7 +147,7 @@ func (s *logScribe) register() func() {
 	}
 }
 
-func (s *logScribe) handleIncomingRequest(r pb.LogRequest) error {
+func (s *LogScribe) handleIncomingRequest(r pb.LogRequest) error {
 	if s.isDB {
 		return handleDBRequest(s.database, r.Filename, r.Line)
 	}
