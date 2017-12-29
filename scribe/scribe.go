@@ -5,8 +5,6 @@ import (
 	"sync"
 	"time"
 
-	"gopkg.in/mgo.v2"
-
 	pb "github.com/RomanosTrechlis/go-scribe/api"
 	logServ "github.com/RomanosTrechlis/go-scribe/service/log"
 	"github.com/RomanosTrechlis/go-scribe/service/ping"
