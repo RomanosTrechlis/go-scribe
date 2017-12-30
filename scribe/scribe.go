@@ -165,7 +165,7 @@ func handleFileRequest(mu sync.RWMutex, rootPath, path, filename, line string, s
 }
 
 type log struct {
-	string `json:"line"`
+	Line string `json:"line"`
 }
 
 func handleDBRequest(db *mgo.Database, filename, line string) error {

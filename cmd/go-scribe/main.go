@@ -36,6 +36,7 @@ type execConfig struct {
 func (c *execConfig) Run() (exitCode int) {
 	commands := []command{
 		&agent{},
+		&dockerAgent{},
 		&mediator{},
 	}
 
@@ -46,6 +47,10 @@ func (c *execConfig) Run() (exitCode int) {
 		{
 			"go-scribe agent",
 			"start a scribe agent",
+		},
+		{
+			"go-scribe docker-agent",
+			"start a scribe agent for docker container",
 		},
 		{
 			"go-scribe mediator",
