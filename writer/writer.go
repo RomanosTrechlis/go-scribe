@@ -17,35 +17,23 @@ import (
 
 // RPCWriter implements Writer interface
 type RPCWriter struct {
-	target
-	conn *grpc.ClientConn
+	conn     *grpc.ClientConn
+	filename string
 }
 
 type builderImpl struct {
-	target
-	address string
-	port    int
-	cert    string
-	key     string
-	ca      string
-}
-
-type target struct {
-	isDir    bool
-	path     string
 	filename string
-
-	isDB     bool
-	dbServer string
-	dbName   string
+	address  string
+	port     int
+	cert     string
+	key      string
+	ca       string
 }
 
 // Builder interface holds the option methods
 // in order to create an RPCWriter.
 type Builder interface {
-	WithPath(path string) Builder
 	WithFilename(filename string) Builder
-	WithDatabase(dbServer, dbName string) Builder
 	WithSecurity(cert, key, ca string) Builder
 	Build() (*RPCWriter, error)
 }
@@ -56,33 +44,12 @@ func NewBuilder(address string, port int) Builder {
 	return builderImpl{
 		address: address,
 		port:    port,
-		target: target{
-			isDir: false,
-			isDB:  false,
-		},
 	}
 }
 
 // WithFilename adds a non default filename parameter to builder
 func (b builderImpl) WithFilename(filename string) Builder {
 	b.filename = filename
-	b.isDir = true
-	return b
-}
-
-// WithPath adds a non default path parameter to builder
-func (b builderImpl) WithPath(path string) Builder {
-	b.path = path
-	b.isDir = true
-	return b
-}
-
-// WithDatabase adds database support
-func (b builderImpl) WithDatabase(dbServer, dbName string) Builder {
-	b.dbServer = dbServer
-	b.dbName = dbName
-	b.isDB = true
-	b.isDir = false
 	return b
 }
 
@@ -111,12 +78,9 @@ func newRPCWriter(b builderImpl) (*RPCWriter, error) {
 		return nil, fmt.Errorf("failed to create connection to scribe: %v", err)
 	}
 
-	if b.isDB {
-		b.isDir = false
-	}
 	return &RPCWriter{
 		conn:   conn,
-		target: b.target,
+		filename: b.filename,
 	}, nil
 }
 
@@ -180,7 +144,6 @@ func (w *RPCWriter) Write(p []byte) (n int, err error) {
 	c := pb.NewLogScribeClient(w.conn)
 	req := &pb.LogRequest{
 		Filename: w.filename,
-		Path:     w.path,
 		Line:     string(p),
 	}
 	r, err := c.Log(context.Background(), req)
@@ -194,23 +157,9 @@ func (w *RPCWriter) Write(p []byte) (n int, err error) {
 }
 
 // NewLogger creates a *Logger with default prefix and flags and a new RPCWriter
-func NewLogger(path, filename, address string, port int, cert, key, ca string) (*log.Logger, error) {
+func NewLogger(filename, address string, port int, cert, key, ca string) (*log.Logger, error) {
 	w, err := NewBuilder(address, port).
 		WithFilename(filename).
-		WithPath(path).
-		WithSecurity(cert, key, ca).
-		Build()
-	if err != nil {
-		return nil, err
-	}
-	flag := log.Ldate | log.Ltime | log.Lshortfile
-	return log.New(w, "", flag), nil
-}
-
-// NewLogger creates a *Logger with default prefix and flags and a new RPCWriter
-func NewDBLogger(dbServer, dbName, address string, port int, cert, key, ca string) (*log.Logger, error) {
-	w, err := NewBuilder(address, port).
-		WithDatabase(dbServer, dbName).
 		WithSecurity(cert, key, ca).
 		Build()
 	if err != nil {

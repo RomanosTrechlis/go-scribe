@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	l, err := writer.New("writer", "writerLogs", "romanos", 8080, "", "", "")
+	l, err := writer.NewLogger("writer", "romanos", 8080, "", "", "")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error creating logger writer: %v", err)
 		os.Exit(1)
@@ -19,6 +19,6 @@ func main() {
 
 	logger.Printf("this is another test because %s", "reasons")
 
-	lll, _ := writer.NewLogger("newWriter", "writerLogs", "romanos", 8080, "", "", "")
+	lll, _ := writer.NewLogger("newWriter", "romanos", 8080, "", "", "")
 	lll.Println("new logger")
 }
