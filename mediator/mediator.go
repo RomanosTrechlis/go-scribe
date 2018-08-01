@@ -19,7 +19,7 @@ import (
 
 // Mediator grpc server and other relative info
 type Mediator struct {
-	// mux protectes scribes and scribesCon
+	// mux protects scribes and scribesCon
 	// while pinging subscribers.
 	mux sync.Mutex
 	// scribes has as key the scribe id

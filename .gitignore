@@ -7,3 +7,4 @@ go-scribe.iml
 cmd/path
 
 **/*.out
+**/*.txt
