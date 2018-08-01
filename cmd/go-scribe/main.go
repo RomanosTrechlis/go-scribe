@@ -1,228 +1,292 @@
 package main
 
 import (
-	"bytes"
-	"flag"
+	"context"
 	"fmt"
-	"io"
 	"log"
+	"net/http"
 	"os"
-	"strings"
-	"text/tabwriter"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/RomanosTrechlis/go-icls/cli"
+	pb "github.com/RomanosTrechlis/go-scribe/api"
+	med "github.com/RomanosTrechlis/go-scribe/mediator"
+	"github.com/RomanosTrechlis/go-scribe/profiling"
+	"github.com/RomanosTrechlis/go-scribe/scribe"
+	p "github.com/RomanosTrechlis/go-scribe/util/format/print"
+	rpc "github.com/RomanosTrechlis/go-scribe/util/gserver"
+	"github.com/rs/xid"
+	"google.golang.org/grpc"
 )
 
-type ctx struct {
-	WorkingDir string      // Where to execute.
-	Out, Err   *log.Logger // Required loggers.
+const (
+	agentShortHelp = `starts a scribe agent`
+	agentLongHelp  = `go-scribe agent starts a scribe agent.
+
+Before starting the agent the logging path must exists.
+Then it sets up a gRPC server to receives logging
+requests.
+
+Agent supports a 2-way-SSL authentication by passing the
+certificate, the private key, and the certificate authority
+file names.
+
+There is also support for profiling the server it runs by
+passing the pprof flag and the pport to access it.
+	`
+
+	mediatorShortHelp = `starts a scribe mediator service`
+	mediatorLongHelp  = `go-scribe mediator starts a scribe mediator service.
+
+Mediator is a functionality of go-scribe that instead of
+writing logs, it delegates this responsibility to a registered
+scribe agent.
+The algorithm deciding the responsible agent is very simple.
+
+It, also, supports 2-way-SSL authentication by passing from the
+flags the certificate, the private key, and the certificate
+authority filename.
+
+There is also support for profiling the server it runs by
+passing the pprof flag and the pport to access it.
+	`
+)
+
+var c *cli.CLI
+
+func init() {
+	c = cli.New()
+	agent := c.New("agent", agentShortHelp, agentLongHelp, agentHandler)
+	agent.IntFlag("port", "", 8080, "port for server to listen to requests", false)
+	agent.BoolFlag("pprof", "", false, "additional server for pprof functionality", false)
+	agent.BoolFlag("console", "", false, "dumps log lines to console", false)
+	agent.BoolFlag("verbose", "", false, "prints regular handled request count", false)
+	agent.StringFlag("mediator", "", "", "mediators address if exists, i.e 127.0.0.1:8080", false)
+	agent.IntFlag("pport", "", 1111, "port for pprof server", false)
+	agent.StringFlag("path", "", "../../logs", "path for logs to be persisted", false)
+	agent.StringFlag("size", "", "1MB", "max size for individual files, -1B for infinite size", false)
+	agent.StringFlag("dbName", "", "", "database name in the case the scribe writes on a database", false)
+	agent.StringFlag("dbServer", "", "", "database server for the scribe to write on it", false)
+
+	agent.StringFlag("crt", "", "", "host's certificate for secured connections", false)
+	agent.StringFlag("pk", "", "", "host's private key", false)
+	agent.StringFlag("ca", "", "", "certificate authority's certificate", false)
+
+	med := c.New("mediator", mediatorShortHelp, mediatorLongHelp, mediatorHandler)
+	med.IntFlag("port", "", 8000, "port for mediator server to listen to requests", false)
+	med.BoolFlag("pprof", "", false, "additional server for pprof functionality", false)
+	med.IntFlag("pport", "", 2222, "port for pprof server", false)
+	med.StringFlag("crt", "", "", "host's certificate for secured connections", false)
+	med.StringFlag("pk", "", "", "host's private key", false)
+	med.StringFlag("ca", "", "", "certificate authority's certificate", false)
 }
 
-type command interface {
-	Name() string
-	Args() string
-	ShortHelp() string
-	LongHelp() string
-	Register(*flag.FlagSet)
-	Hidden() bool
-	Run(*ctx, []string) error
+func agentHandler(flags map[string]string) error {
+	printLogoAgent()
+
+	id := xid.New().String()
+	p.Print(fmt.Sprintf("Scribe's id: %s", id))
+
+	// stopAll channel listens to termination and interupt signals.
+	stopAll := make(chan os.Signal, 1)
+	signal.Notify(stopAll, syscall.SIGTERM, syscall.SIGINT)
+
+	// register to mediator
+	mediator := c.StringValue("mediator", "agent", flags)
+	if mediator != "" {
+		err := addMediator(id, "agent", flags)
+		if err != nil {
+			return fmt.Errorf("failed to connect to mediator %s: %v", c.StringValue("mediator", "agent", flags), err)
+		}
+	}
+
+	s, err := createScribe("agent", flags)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v", err)
+		os.Exit(2)
+	}
+
+	infoBlock("agent", flags)
+
+	defer s.Shutdown()
+	go s.Serve()
+
+	var srv *http.Server
+	pprofInfo, _ := c.BoolValue("pprof", "agent", flags)
+	pport, _ := c.IntValue("pport", "agent", flags)
+	if pprofInfo {
+		srv = profiling.Serve(pport)
+		defer srv.Shutdown(nil)
+	}
+
+	verbose, _ := c.BoolValue("verbose", "agent", flags)
+	if verbose {
+		go s.Tick(20)
+	}
+
+	<-stopAll
+	return nil
 }
 
-type execConfig struct {
-	WorkingDir     string    // Where to execute
-	Args           []string  // Command-line arguments, starting with the program name.
-	Env            []string  // Environment variables
-	Stdout, Stderr io.Writer // Log output
+func mediatorHandler(flags map[string]string) error {
+	printLogo()
+
+	// stopAll channel listens to termination and interupt signals.
+	stopAll := make(chan os.Signal, 1)
+	signal.Notify(stopAll, syscall.SIGTERM, syscall.SIGINT)
+
+	port, _ := c.IntValue("port", "mediator", flags)
+	pport, _ := c.IntValue("pport", "mediator", flags)
+	m, err := med.New(port, c.StringValue("crt", "mediator", flags), c.StringValue("pk", "mediator", flags), c.StringValue("ca", "mediator", flags))
+	if err != nil {
+		return fmt.Errorf("failed to start a new mediator: %v", err)
+	}
+	defer m.Shutdown()
+	go m.Serve()
+
+	var srv *http.Server
+	pprofInfo, err := c.BoolValue("pprof", "mediator", flags)
+	if pprofInfo {
+		srv = profiling.Serve(pport)
+		defer srv.Shutdown(nil)
+	}
+	<-stopAll
+	return nil
 }
 
-func (c *execConfig) Run() (exitCode int) {
-	commands := []command{
-		&agent{},
-		&dockerAgent{},
-		&mediator{},
-	}
-
-	outLogger := log.New(c.Stdout, "", 0)
-	errLogger := log.New(c.Stderr, "", 0)
-
-	examples := [][2]string{
-		{
-			"go-scribe agent",
-			"start a scribe agent",
-		},
-		{
-			"go-scribe docker-agent",
-			"start a scribe agent for docker container",
-		},
-		{
-			"go-scribe mediator",
-			"start a mediator service",
-		},
-	}
-
-	usage := func() {
-		errLogger.Println("go-scribe is a remote service for centralized logging")
-		errLogger.Println()
-		errLogger.Println("Usage: go-scribe <command>")
-		errLogger.Println()
-		errLogger.Println("Commands:")
-		errLogger.Println()
-		w := tabwriter.NewWriter(c.Stderr, 0, 4, 2, ' ', 0)
-		for _, cmd := range commands {
-			if !cmd.Hidden() {
-				fmt.Fprintf(w, "\t%s\t%s\n", cmd.Name(), cmd.ShortHelp())
-			}
+func createScribe(cmd string, flags map[string]string) (*scribe.LogScribe, error) {
+	port, _ := c.IntValue("port", cmd, flags)
+	if c.StringValue("dbServer", cmd, flags) != "" && c.StringValue("dbName", cmd, flags) != "" {
+		gRPC, err := rpc.New(c.StringValue("crt", cmd, flags), c.StringValue("pk", cmd, flags), c.StringValue("ca", cmd, flags))
+		if err != nil {
+			return nil, fmt.Errorf("failed to create a gRPC server: %v", err)
 		}
-		w.Flush()
-		errLogger.Println()
-		errLogger.Println("Examples:")
-		for _, example := range examples {
-			fmt.Fprintf(w, "\t%s\t%s\n", example[0], example[1])
+		s, err := scribe.NewScribe(port, gRPC, true, c.StringValue("dbServer", cmd, flags),
+			c.StringValue("dbName", cmd, flags), "", 0)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create scribe: %v", err)
 		}
-		w.Flush()
-		errLogger.Println()
-		errLogger.Println("Use \"go-scribe help [command]\" for more information about a command.")
+		return s, nil
 	}
 
-	cmdName, printCommandHelp, exit := parseArgs(c.Args)
-	if exit {
-		usage()
-		exitCode = 1
-		return
+	// validate path passed
+	if err := scribe.CheckPath(c.StringValue("path", cmd, flags)); err != nil {
+		return nil, fmt.Errorf("path passed is not valid: %v\n", err)
 	}
-
-	for _, cmd := range commands {
-		if cmd.Name() == cmdName {
-			// Build flag set with global flags in there.
-			fs := flag.NewFlagSet(cmdName, flag.ContinueOnError)
-			fs.SetOutput(c.Stderr)
-
-			// Register the subcommand flags in there, too.
-			cmd.Register(fs)
-
-			// Override the usage text to something nicer.
-			resetUsage(errLogger, fs, cmdName, cmd.Args(), cmd.LongHelp())
-
-			if printCommandHelp {
-				fs.Usage()
-				exitCode = 1
-				return
-			}
-
-			// Parse the flags the user gave us.
-			// flag package automatically prints usage and error message in err != nil
-			// or if '-h' flag provided
-			if err := fs.Parse(c.Args[2:]); err != nil {
-				exitCode = 1
-				return
-			}
-
-			// Set up context.
-			ctx := &ctx{
-				Out: outLogger,
-				Err: errLogger,
-			}
-
-			// Run the command with the post-flag-processing args.
-			if err := cmd.Run(ctx, fs.Args()); err != nil {
-				errLogger.Printf("%v\n", err)
-				exitCode = 1
-				return
-			}
-
-			// Easy peasy livin' breezy.
-			return
-		}
+	maxSize, err := scribe.LexicalToNumber(c.StringValue("size", cmd, flags))
+	if err != nil {
+		return nil, fmt.Errorf("couldn't parse size input to bytes: %v", err)
 	}
-
-	errLogger.Printf("go-scribe: %s: no such command\n", cmdName)
-	usage()
-	exitCode = 1
-	return
+	s, err := scribe.New(c.StringValue("path", cmd, flags), port, maxSize, c.StringValue("mediator", cmd, flags),
+		c.StringValue("crt", cmd, flags), c.StringValue("pk", cmd, flags), c.StringValue("ca", cmd, flags))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create scribe: %v", err)
+	}
+	return s, nil
 }
 
-func resetUsage(logger *log.Logger, fs *flag.FlagSet, name, args, longHelp string) {
-	var (
-		hasFlags   bool
-		flagBlock  bytes.Buffer
-		flagWriter = tabwriter.NewWriter(&flagBlock, 0, 4, 2, ' ', 0)
-	)
-	fs.VisitAll(func(f *flag.Flag) {
-		hasFlags = true
-		// Default-empty string vars should read "(default: <none>)"
-		// rather than the comparatively ugly "(default: )".
-		defValue := f.DefValue
-		if defValue == "" {
-			defValue = "<none>"
-		}
-		fmt.Fprintf(flagWriter, "\t-%s\t%s (default: %s)\n", f.Name, f.Usage, defValue)
-	})
-	flagWriter.Flush()
-	fs.Usage = func() {
-		logger.Printf("Usage: go-scribe %s %s\n", name, args)
-		logger.Println()
-		logger.Println(strings.TrimSpace(longHelp))
-		logger.Println()
-		if hasFlags {
-			logger.Println("Flags:")
-			logger.Println()
-			logger.Println(flagBlock.String())
-		}
+func addMediator(id, cmd string, flags map[string]string) error {
+	conn, err := grpc.Dial(c.StringValue("mediator", cmd, flags),
+		grpc.WithInsecure(),
+		grpc.WithTimeout(1*time.Second))
+	if err != nil {
+		log.Fatalf("did not connect: %v", err)
 	}
-}
+	defer conn.Close()
 
-// parseArgs determines the name of the go-scribe command and whether the user asked for
-// help to be printed.
-func parseArgs(args []string) (cmdName string, printCmdUsage bool, exit bool) {
-	isHelpArg := func() bool {
-		return strings.Contains(strings.ToLower(args[1]), "help") || strings.ToLower(args[1]) == "-h"
+	cl := pb.NewRegisterClient(conn)
+	host, err := os.Hostname()
+	if err != nil {
+		return fmt.Errorf("failed to get hostname from system: %v", err)
 	}
-
-	switch len(args) {
-	case 0, 1:
-		exit = true
-	case 2:
-		if isHelpArg() {
-			exit = true
-		}
-		cmdName = args[1]
-	default:
-		if isHelpArg() {
-			cmdName = args[2]
-			printCmdUsage = true
-		} else {
-			cmdName = args[1]
-		}
+	port, _ := c.IntValue("port", cmd, flags)
+	req := &pb.RegisterRequest{
+		Id:   id,
+		Addr: fmt.Sprintf("%s:%d", host, port),
 	}
-	return cmdName, printCmdUsage, exit
-}
-
-// getEnv returns the last instance of an environment variable.
-func getEnv(env []string, key string) string {
-	for i := len(env) - 1; i >= 0; i-- {
-		v := env[i]
-		kv := strings.SplitN(v, "=", 2)
-		if kv[0] != key {
+	var retries = 3
+	var success = false
+	for retries > 0 {
+		r, err := cl.Register(context.Background(), req)
+		if err != nil {
+			retries--
+			p.Print(fmt.Sprintf("Failed to register to mediator '%s. "+
+				"Remaining tries: %d", c.StringValue("mediator", cmd, flags), retries))
+			time.Sleep(1 * time.Second)
 			continue
 		}
-		if len(kv) > 1 {
-			return kv[1]
+		if r.GetRes() != "Success" {
+			retries--
+			p.Print(fmt.Sprintf("Failed to register to mediator '%s'. "+
+				"Remaining tries: %d", c.StringValue("mediator", cmd, flags), retries))
+			time.Sleep(2 * time.Second)
+			continue
 		}
-		return ""
+		success = true
+		break
 	}
-	return ""
+	if !success {
+		return fmt.Errorf("failed to register scribe to mediator '%s'\n", c.StringValue("mediator", cmd, flags))
+	}
+
+	p.Print("Successfully registered to mediator")
+	return nil
+}
+
+func infoBlock(cmd string, flags map[string]string) {
+	port, _ := c.IntValue("port", cmd, flags)
+	pport, _ := c.IntValue("pport", cmd, flags)
+	pprofInfo, _ := c.BoolValue("pprof", cmd, flags)
+	dbName := c.StringValue("dbName", cmd, flags)
+	dbServer := c.StringValue("dbServer", cmd, flags)
+	rootPath := c.StringValue("path", cmd, flags)
+	size := c.StringValue("size", cmd, flags)
+	fmt.Println("##########################################################")
+	fmt.Println("\t==>\tPort number:\t", port)
+	if dbServer == "" && dbName == "" {
+		fmt.Println("\t==>\tLog path:\t", rootPath)
+	}
+	if dbServer != "" && dbName != "" {
+		fmt.Println("\t==>\tDatabase Server:\t", dbServer)
+		fmt.Println("\t==>\tDatabase Name:\t", dbName)
+	}
+	maxSize, _ := scribe.LexicalToNumber(size)
+	fmt.Println("\t==>\tLog size:\t", maxSize)
+	fmt.Println("\t==>\tPprof server:\t", pprofInfo)
+	fmt.Println("\t==>\tPprof port:\t", pport)
+	fmt.Println("##########################################################")
+}
+
+func printLogoAgent() {
+	fmt.Println()
+	fmt.Println("██╗      ██████╗  ██████╗     ███████╗ ██████╗██████╗ ██╗██████╗ ███████╗")
+	fmt.Println("██║     ██╔═══██╗██╔════╝     ██╔════╝██╔════╝██╔══██╗██║██╔══██╗██╔════╝")
+	fmt.Println("██║     ██║   ██║██║  ███╗    ███████╗██║     ██████╔╝██║██████╔╝█████╗  ")
+	fmt.Println("██║     ██║   ██║██║   ██║    ╚════██║██║     ██╔══██╗██║██╔══██╗██╔══╝  ")
+	fmt.Println("███████╗╚██████╔╝╚██████╔╝    ███████║╚██████╗██║  ██║██║██████╔╝███████╗")
+	fmt.Println("╚══════╝ ╚═════╝  ╚═════╝     ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝╚═════╝ ╚══════╝")
+}
+
+func printLogo() {
+	fmt.Println(" ___      _______  _______    __   __  _______  ______   ___   _______  _______  _______  ______   ")
+	fmt.Println("|   |    |       ||       |  |  |_|  ||       ||      | |   | |   _   ||       ||       ||    _ |  ")
+	fmt.Println("|   |    |   _   ||    ___|  |       ||    ___||  _    ||   | |  |_|  ||_     _||   _   ||   | ||  ")
+	fmt.Println("|   |    |  | |  ||   | __   |       ||   |___ | | |   ||   | |       |  |   |  |  | |  ||   |_||_ ")
+	fmt.Println("|   |___ |  |_|  ||   ||  |  |       ||    ___|| |_|   ||   | |       |  |   |  |  |_|  ||    __  |")
+	fmt.Println("|       ||       ||   |_| |  | ||_|| ||   |___ |       ||   | |   _   |  |   |  |       ||   |  | |")
+	fmt.Println("|_______||_______||_______|  |_|   |_||_______||______| |___| |__| |__|  |___|  |_______||___|  |_|")
 }
 
 func main() {
-	wd, err := os.Getwd()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "failed to get working directory", err)
-		os.Exit(1)
+	args := os.Args
+	if len(args) == 1 {
+		return
 	}
-	c := &execConfig{
-		Args:       os.Args,
-		Stdout:     os.Stdout,
-		Stderr:     os.Stderr,
-		WorkingDir: wd,
-		Env:        os.Environ(),
+	line := ""
+	for _, a :=  range args[1:] {
+		line += a + " "
 	}
-	os.Exit(c.Run())
+	c.Execute(line)
 }
