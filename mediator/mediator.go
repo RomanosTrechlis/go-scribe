@@ -11,10 +11,10 @@ import (
 
 	pb "github.com/RomanosTrechlis/go-scribe/api"
 	"github.com/RomanosTrechlis/go-scribe/service"
-	"github.com/RomanosTrechlis/go-scribe/util/gserver"
+	"github.com/RomanosTrechlis/go-scribe/internal/util/gserver"
 	"google.golang.org/grpc"
 
-	p "github.com/RomanosTrechlis/go-scribe/util/format/print"
+	p "github.com/RomanosTrechlis/go-scribe/internal/util/format/print"
 )
 
 // Mediator grpc server and other relative info

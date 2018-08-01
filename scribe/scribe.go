@@ -7,8 +7,8 @@ import (
 
 	pb "github.com/RomanosTrechlis/go-scribe/api"
 	"github.com/RomanosTrechlis/go-scribe/service"
-	p "github.com/RomanosTrechlis/go-scribe/util/format/print"
-	"github.com/RomanosTrechlis/go-scribe/util/gserver"
+	p "github.com/RomanosTrechlis/go-scribe/internal/util/format/print"
+	"github.com/RomanosTrechlis/go-scribe/internal/util/gserver"
 )
 
 const (

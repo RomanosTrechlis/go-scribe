@@ -3,7 +3,7 @@ package print
 import (
 	"fmt"
 
-	t "github.com/RomanosTrechlis/go-scribe/util/format/time"
+	t "github.com/RomanosTrechlis/go-scribe/internal/util/format/time"
 )
 
 const (

@@ -15,8 +15,7 @@ import (
 	med "github.com/RomanosTrechlis/go-scribe/mediator"
 	"github.com/RomanosTrechlis/go-scribe/profiling"
 	"github.com/RomanosTrechlis/go-scribe/scribe"
-	p "github.com/RomanosTrechlis/go-scribe/util/format/print"
-	rpc "github.com/RomanosTrechlis/go-scribe/util/gserver"
+	p "github.com/RomanosTrechlis/go-scribe/internal/util/format/print"
 	"github.com/rs/xid"
 	"google.golang.org/grpc"
 )

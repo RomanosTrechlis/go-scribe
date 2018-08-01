@@ -9,7 +9,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/RomanosTrechlis/go-scribe/util/format/time"
+	"github.com/RomanosTrechlis/go-scribe/internal/util/format/time"
 )
 
 // CheckPath checks the validity of a given path
