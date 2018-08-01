@@ -60,12 +60,7 @@ The Mediator also keeps track of which Scribe writes what file, in order to prev
 
 ## TODO
 
-1. add a one-way SSL authentication for the Scribe (or Mediator) only, in addition to the two ways already implemented:
-
-    * an insecure connection (no SSL) and
-    * a two-way SSL authentication requiring both the client and the Scribe to have SSL.
-
-1. add more flags for the Scribe and Mediator making them more parameterizable from cl.
-1. create a more robust algorithm for load balancing among the Scribes.
-1. investigate the use of sync.Map instead of sync.Mutex.
-1. keep refactoring.
+- [ ] add a one-way SSL authentication for the Scribe (or Mediator).
+- [ ] create a more robust algorithm for load balancing among the Scribes.
+- [ ] investigate the use of sync.Map instead of sync.Mutex.
+- [ ] add more test coverage
