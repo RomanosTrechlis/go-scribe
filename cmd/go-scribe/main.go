@@ -67,9 +67,6 @@ func init() {
 	agent.IntFlag("pport", "", 1111, "port for pprof server", false)
 	agent.StringFlag("path", "", "../../logs", "path for logs to be persisted", false)
 	agent.StringFlag("size", "", "1MB", "max size for individual files, -1B for infinite size", false)
-	agent.StringFlag("dbName", "", "", "database name in the case the scribe writes on a database", false)
-	agent.StringFlag("dbServer", "", "", "database server for the scribe to write on it", false)
-
 	agent.StringFlag("crt", "", "", "host's certificate for secured connections", false)
 	agent.StringFlag("pk", "", "", "host's private key", false)
 	agent.StringFlag("ca", "", "", "certificate authority's certificate", false)
@@ -158,18 +155,6 @@ func mediatorHandler(flags map[string]string) error {
 
 func createScribe(cmd string, flags map[string]string) (*scribe.LogScribe, error) {
 	port, _ := c.IntValue("port", cmd, flags)
-	if c.StringValue("dbServer", cmd, flags) != "" && c.StringValue("dbName", cmd, flags) != "" {
-		gRPC, err := rpc.New(c.StringValue("crt", cmd, flags), c.StringValue("pk", cmd, flags), c.StringValue("ca", cmd, flags))
-		if err != nil {
-			return nil, fmt.Errorf("failed to create a gRPC server: %v", err)
-		}
-		s, err := scribe.NewScribe(port, gRPC, true, c.StringValue("dbServer", cmd, flags),
-			c.StringValue("dbName", cmd, flags), "", 0)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create scribe: %v", err)
-		}
-		return s, nil
-	}
 
 	// validate path passed
 	if err := scribe.CheckPath(c.StringValue("path", cmd, flags)); err != nil {
@@ -239,19 +224,12 @@ func infoBlock(cmd string, flags map[string]string) {
 	port, _ := c.IntValue("port", cmd, flags)
 	pport, _ := c.IntValue("pport", cmd, flags)
 	pprofInfo, _ := c.BoolValue("pprof", cmd, flags)
-	dbName := c.StringValue("dbName", cmd, flags)
-	dbServer := c.StringValue("dbServer", cmd, flags)
 	rootPath := c.StringValue("path", cmd, flags)
 	size := c.StringValue("size", cmd, flags)
+
 	fmt.Println("##########################################################")
 	fmt.Println("\t==>\tPort number:\t", port)
-	if dbServer == "" && dbName == "" {
-		fmt.Println("\t==>\tLog path:\t", rootPath)
-	}
-	if dbServer != "" && dbName != "" {
-		fmt.Println("\t==>\tDatabase Server:\t", dbServer)
-		fmt.Println("\t==>\tDatabase Name:\t", dbName)
-	}
+	fmt.Println("\t==>\tLog path:\t", rootPath)
 	maxSize, _ := scribe.LexicalToNumber(size)
 	fmt.Println("\t==>\tLog size:\t", maxSize)
 	fmt.Println("\t==>\tPprof server:\t", pprofInfo)

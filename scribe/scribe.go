@@ -9,8 +9,6 @@ import (
 	"github.com/RomanosTrechlis/go-scribe/service"
 	p "github.com/RomanosTrechlis/go-scribe/util/format/print"
 	"github.com/RomanosTrechlis/go-scribe/util/gserver"
-	"google.golang.org/grpc"
-	"gopkg.in/mgo.v2"
 )
 
 const (
@@ -19,6 +17,7 @@ const (
 
 // LogScribe holds the servers and other relative information
 type LogScribe struct {
+	// TODO(romanos): remove remnants of db logging
 	// target struct keeps info on where to write logs
 	target
 
@@ -44,7 +43,7 @@ func New(root string, port int, fileSize int64, mediator, crt, key, ca string) (
 		return nil, fmt.Errorf("failed to create grpc server: %v", err)
 	}
 
-	t, err := NewTarget(false, true, "", "", root, fileSize)
+	t, err := createTarget(root, fileSize)
 	if err != nil {
 		return nil, err
 	}
@@ -58,24 +57,6 @@ func New(root string, port int, fileSize int64, mediator, crt, key, ca string) (
 		},
 		stream:   make(chan pb.LogRequest),
 		mediator: mediator,
-	}, nil
-}
-
-// NewScribe returns a log scribe that can be parametrized to either write on files or a db.
-func NewScribe(port int, gServer *grpc.Server, isDB bool, dbServer, dbStore, rootPath string, fileSize int64) (*LogScribe, error) {
-	t, err := NewTarget(isDB, !isDB, dbServer, dbStore, rootPath, fileSize)
-	if err != nil {
-		return nil, err
-	}
-
-	return &LogScribe{
-		target: *t,
-		GRPC: gserver.GRPC{
-			Server: gServer,
-			Port:   port,
-			Stop:   make(chan struct{}),
-		},
-		stream: make(chan pb.LogRequest),
 	}, nil
 }
 
@@ -147,10 +128,6 @@ func (s *LogScribe) register() func() {
 }
 
 func (s *LogScribe) handleIncomingRequest(r pb.LogRequest) error {
-	if s.isDB {
-		return handleDBRequest(s.database, r.Filename, r.Line)
-	}
-
 	var mu sync.RWMutex
 	return handleFileRequest(mu, s.rootPath, r.Path, r.Filename, r.Line, s.fileSize)
 }
@@ -162,12 +139,4 @@ func handleFileRequest(mu sync.RWMutex, rootPath, path, filename, line string, s
 		return fmt.Errorf("failed to write line: %v", err)
 	}
 	return nil
-}
-
-type log struct {
-	Line string `json:"line"`
-}
-
-func handleDBRequest(db *mgo.Database, filename, line string) error {
-	return db.C(filename).Insert(log{line})
 }
