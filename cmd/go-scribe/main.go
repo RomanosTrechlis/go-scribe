@@ -98,7 +98,24 @@ func agentHandler(flags map[string]string) error {
 		}
 	}
 
-	s, err := createScribe("agent", flags)
+	port, _ := c.IntValue("port", "agent", flags)
+
+	// validate path passed
+	if err := scribe.CheckPath(c.StringValue("path", "agent", flags)); err != nil {
+		fmt.Fprintf(os.Stderr,"path passed is not valid: %v\n", err)
+		os.Exit(2)
+	}
+	maxSize, err := scribe.LexicalToNumber(c.StringValue("size", "agent", flags))
+	if err != nil {
+		fmt.Fprintf(os.Stderr,"couldn't parse size input to bytes: %v", err)
+		os.Exit(2)
+	}
+	s, err := scribe.New(c.StringValue("path", "agent", flags), port, maxSize, c.StringValue("mediator", "agent", flags),
+		c.StringValue("crt", "agent", flags), c.StringValue("pk", "agent", flags), c.StringValue("ca", "agent", flags))
+	if err != nil {
+		fmt.Fprintf(os.Stderr,"failed to create scribe: %v", err)
+		os.Exit(2)
+	}
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v", err)
 		os.Exit(2)
@@ -150,25 +167,6 @@ func mediatorHandler(flags map[string]string) error {
 	}
 	<-stopAll
 	return nil
-}
-
-func createScribe(cmd string, flags map[string]string) (*scribe.LogScribe, error) {
-	port, _ := c.IntValue("port", cmd, flags)
-
-	// validate path passed
-	if err := scribe.CheckPath(c.StringValue("path", cmd, flags)); err != nil {
-		return nil, fmt.Errorf("path passed is not valid: %v\n", err)
-	}
-	maxSize, err := scribe.LexicalToNumber(c.StringValue("size", cmd, flags))
-	if err != nil {
-		return nil, fmt.Errorf("couldn't parse size input to bytes: %v", err)
-	}
-	s, err := scribe.New(c.StringValue("path", cmd, flags), port, maxSize, c.StringValue("mediator", cmd, flags),
-		c.StringValue("crt", cmd, flags), c.StringValue("pk", cmd, flags), c.StringValue("ca", cmd, flags))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create scribe: %v", err)
-	}
-	return s, nil
 }
 
 func addMediator(id, cmd string, flags map[string]string) error {

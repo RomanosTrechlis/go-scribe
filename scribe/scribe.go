@@ -16,7 +16,7 @@ const (
 )
 
 // LogScribe holds the servers and other relative information
-type LogScribe struct {
+type logScribe struct {
 	// TODO(romanos): remove remnants of db logging
 	// target struct keeps info on where to write logs
 	target
@@ -37,7 +37,7 @@ type LogScribe struct {
 }
 
 // New creates a Scribe struct
-func New(root string, port int, fileSize int64, mediator, crt, key, ca string) (*LogScribe, error) {
+func New(root string, port int, fileSize int64, mediator, crt, key, ca string) (*logScribe, error) {
 	srv, err := gserver.New(crt, key, ca)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create grpc server: %v", err)
@@ -48,7 +48,7 @@ func New(root string, port int, fileSize int64, mediator, crt, key, ca string) (
 		return nil, err
 	}
 
-	return &LogScribe{
+	return &logScribe{
 		target: *t,
 		GRPC: gserver.GRPC{
 			Server: srv,
@@ -61,7 +61,7 @@ func New(root string, port int, fileSize int64, mediator, crt, key, ca string) (
 }
 
 // Serve initializes log Scribe's servers
-func (s *LogScribe) Serve() {
+func (s *logScribe) Serve() {
 	p.Print("Log Scribe is starting...")
 	s.stopAll = make(chan struct{})
 	s.startTime = time.Now()
@@ -76,7 +76,7 @@ func (s *LogScribe) Serve() {
 }
 
 // Shutdown gracefully stops log Scribe from serving
-func (s *LogScribe) Shutdown() {
+func (s *logScribe) Shutdown() {
 	close(s.stopAll)
 	p.Print("Initializing shut down, please wait.")
 	close(s.Stop)
@@ -85,7 +85,7 @@ func (s *LogScribe) Shutdown() {
 }
 
 // Tick prints a count of requests handled.
-func (s *LogScribe) Tick(interval time.Duration) {
+func (s *logScribe) Tick(interval time.Duration) {
 	for range time.Tick(interval * time.Second) {
 		select {
 		case <-s.stopAll:
@@ -98,7 +98,7 @@ func (s *LogScribe) Tick(interval time.Duration) {
 }
 
 // serviceHandler implements the protobuf service
-func (s *LogScribe) serviceHandler(stop chan struct{}) {
+func (s *logScribe) serviceHandler(stop chan struct{}) {
 	for {
 		select {
 		case req := <-s.stream:
@@ -115,7 +115,7 @@ func (s *LogScribe) serviceHandler(stop chan struct{}) {
 	}
 }
 
-func (s *LogScribe) register() func() {
+func (s *logScribe) register() func() {
 	return func() {
 		log := service.Logger{Stream: s.stream}
 		pb.RegisterLogScribeServer(s.Server, log)
@@ -127,7 +127,7 @@ func (s *LogScribe) register() func() {
 	}
 }
 
-func (s *LogScribe) handleIncomingRequest(r pb.LogRequest) error {
+func (s *logScribe) handleIncomingRequest(r pb.LogRequest) error {
 	var mu sync.RWMutex
 	return handleFileRequest(mu, s.rootPath, r.Path, r.Filename, r.Line, s.fileSize)
 }
