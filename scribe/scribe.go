@@ -6,9 +6,9 @@ import (
 	"time"
 
 	pb "github.com/RomanosTrechlis/go-scribe/api"
-	"github.com/RomanosTrechlis/go-scribe/service"
 	p "github.com/RomanosTrechlis/go-scribe/internal/util/format/print"
 	"github.com/RomanosTrechlis/go-scribe/internal/util/gserver"
+	"github.com/RomanosTrechlis/go-scribe/service"
 )
 
 const (
@@ -22,7 +22,7 @@ type logScribe struct {
 	target
 
 	// GRPC server
-	gserver.GRPC
+	gRPC gserver.GRPC
 
 	// input stream of protobuf requests
 	stream chan pb.LogRequest
@@ -50,7 +50,7 @@ func New(root string, port int, fileSize int64, mediator, crt, key, ca string) (
 
 	return &logScribe{
 		target: *t,
-		GRPC: gserver.GRPC{
+		gRPC: gserver.GRPC{
 			Server: srv,
 			Port:   port,
 			Stop:   make(chan struct{}),
@@ -66,10 +66,10 @@ func (s *logScribe) Serve() {
 	s.stopAll = make(chan struct{})
 	s.startTime = time.Now()
 	// go func listens to stream and stop channels
-	go s.serviceHandler(s.Stop)
+	go s.serviceHandler(s.gRPC.Stop)
 
 	// rpc server
-	go gserver.Serve(s.register(), fmt.Sprintf(":%d", s.Port), s.Server)
+	go gserver.Serve(s.register(), fmt.Sprintf(":%d", s.gRPC.Port), s.gRPC.Server)
 
 	<-s.stopAll
 	p.Print("gRPC server stopped.")
@@ -79,7 +79,7 @@ func (s *logScribe) Serve() {
 func (s *logScribe) Shutdown() {
 	close(s.stopAll)
 	p.Print("Initializing shut down, please wait.")
-	close(s.Stop)
+	close(s.gRPC.Stop)
 	p.Print(fmt.Sprintf("Log Scribe handled %d requests during %v", s.counter, time.Since(s.startTime)))
 	p.Print("Log Scribe shut down")
 }
@@ -118,11 +118,11 @@ func (s *logScribe) serviceHandler(stop chan struct{}) {
 func (s *logScribe) register() func() {
 	return func() {
 		log := service.Logger{Stream: s.stream}
-		pb.RegisterLogScribeServer(s.Server, log)
+		pb.RegisterLogScribeServer(s.gRPC.Server, log)
 
 		if s.mediator != "" {
 			pinger := &service.Pinger{}
-			pb.RegisterPingerServer(s.Server, pinger)
+			pb.RegisterPingerServer(s.gRPC.Server, pinger)
 		}
 	}
 }
