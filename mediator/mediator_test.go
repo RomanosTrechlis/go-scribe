@@ -46,3 +46,26 @@ func Test_ReCalculateScribeResponsibility(t *testing.T) {
 	})
 
 }
+
+func TestNew(t *testing.T) {
+	var tests = []struct {
+		port int
+		crt  string
+		pk   string
+		ca   string
+
+		err bool
+	}{
+		{1122, "", "", "", false},
+		{1122, "dummy", "dummy", "dummy", true},
+	}
+	for _, tt := range tests {
+		_, err := New(tt.port, tt.crt, tt.pk, tt.ca)
+		if err != nil && !tt.err {
+			t.Errorf("expecting no err, got error %v", err)
+		}
+		if err == nil && tt.err {
+			t.Error("expecting err, got no error")
+		}
+	}
+}

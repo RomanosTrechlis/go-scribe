@@ -3,6 +3,7 @@ package gserver
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -23,11 +24,10 @@ func New(crt, key, ca string) (*grpc.Server, error) {
 	// one way ssl
 	if crt != "" && key != "" && ca == "" {
 		// todo(romanos): yet to be implemented
+		return nil, errors.New("one way ssl is not yet implemented")
 	}
 
-	// two way ssl
-	p.Print("Log streamer will start with TLS")
-	// Load the certifmediatoricates from disk
+	// Load the certificates from disk
 	certificate, err := tls.LoadX509KeyPair(crt, key)
 	if err != nil {
 		return nil, fmt.Errorf("could not load server key pair: %s", err)
@@ -52,6 +52,7 @@ func New(crt, key, ca string) (*grpc.Server, error) {
 		ClientCAs:    certPool,
 	})
 
+	p.Print("Log streamer will start with TLS")
 	// Create the gRPC server with the credentials
 	return grpc.NewServer(grpc.Creds(creds)), nil
 }

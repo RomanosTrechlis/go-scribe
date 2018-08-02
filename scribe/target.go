@@ -7,8 +7,13 @@ type target struct {
 }
 
 func createTarget(root string, fileSize int64) (*target, error) {
+	err := CheckPath(root)
+	if err != nil {
+		return nil, err
+	}
+
 	target := &target{
-		isFile:   true,
+		isFile: true,
 		rootPath: root,
 		fileSize: fileSize,
 	}

@@ -7,14 +7,12 @@ import (
 	"sync"
 	"time"
 
-	"golang.org/x/net/context"
-
 	pb "github.com/RomanosTrechlis/go-scribe/api"
-	"github.com/RomanosTrechlis/go-scribe/service"
-	"github.com/RomanosTrechlis/go-scribe/internal/util/gserver"
-	"google.golang.org/grpc"
-
 	p "github.com/RomanosTrechlis/go-scribe/internal/util/format/print"
+	"github.com/RomanosTrechlis/go-scribe/internal/util/gserver"
+	"github.com/RomanosTrechlis/go-scribe/service"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 )
 
 // Mediator grpc server and other relative info
