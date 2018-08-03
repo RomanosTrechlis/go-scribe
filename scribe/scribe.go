@@ -129,13 +129,9 @@ func (s *logScribe) register() func() {
 
 func (s *logScribe) handleIncomingRequest(r pb.LogRequest) error {
 	var mu sync.RWMutex
-	return handleFileRequest(mu, s.rootPath, r.Path, r.Filename, r.Line, s.fileSize)
-}
-
-func handleFileRequest(mu sync.RWMutex, rootPath, path, filename, line string, size int64) error {
 	mu.Lock()
 	defer mu.Unlock()
-	if err := writeLine(rootPath, path, filename, line, size); err != nil {
+	if err := writeLine(s.rootPath, r.Path, r.Filename, r.Line, s.fileSize); err != nil {
 		return fmt.Errorf("failed to write line: %v", err)
 	}
 	return nil
