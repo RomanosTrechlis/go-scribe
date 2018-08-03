@@ -125,7 +125,7 @@ func (m *Mediator) getConnection(s string) (*grpc.ClientConn, error) {
 }
 
 func (m *Mediator) startPingingSubcribers() {
-	for _ = range time.Tick(5 * time.Second) {
+        for range time.Tick(5 * time.Second) {
 		m.mux.Lock()
 		m.pingSubscribers()
 		m.mux.Unlock()
