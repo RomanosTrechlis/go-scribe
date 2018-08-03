@@ -1,7 +1,7 @@
 language: go
 
 go:
-  - "1.10"
+  - '1.10'
 
 script:
   - go test -race -coverprofile=coverage.txt -covermode=atomic ./...
@@ -10,3 +10,14 @@ script:
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
+
+deploy:
+  provider: releases
+  api_key:
+    secure: UosI1PScETWWymF8NWaZ1Hy81ZMMBc3TPGYunffYidJ7pih8pt7OVMVqyg4wThVgXTaTVkUy2QW+nxcS6GEuyFkPMpYBU8Uc60n1eZqx3ksv8PyfzI5+ZM9xDbsu5MXBeAHWrBZe/qetM/gGkjxa6CoJlDS0IGe6i3Mz5VcbWIH9Ktwk/t00cnC/zAYbl5EuwQKvdRxQ/ZKyQgo1D9xs5k14xqDkFVb9bUXF6YVYayFg/Czg88cjpq8hOQ6pUQo30flCb3UiuT3k8bLy6D86/a/tugqpUt4KkXRpLB2TKeJwwX4GKG90AJgLvbwJVPx1gMoaiulzlKCsGIq/QM/1fhuuKCxgOtGPQGi3WQkLqn3M9KNXL8DjpUJEv86nTmWDB2g+DNyDPqkjWvInXNX2KqSiumHQXVrDXtA3SfJZFduMyQ2HbdqvYUjOqH7gY5v+ysnd1Yh2Bpe3hd40aiGTxcAFFaoEMykZv6PK17p09BW0KBE2jwnuF6+ntbzK8Yl8+ZxVCvEZRqn0D6MsFPJhuiEN19KCCsCbu6pZZmWGiVFrPWFRJw+XZWy0zWkea+3OKtCyIONtOonexQO/LAK1J2X8+bRoNkEaeLMn/BwIyMS8if/YzxIIT0T9oRHV1bazA5+aK9+/0W45/KEWtUrNxjMds03KHMt4TpyQEU2ulgc=
+  file: cmd/go-scribe/go-scribe
+  skip_cleanup: true
+  overwrite: true
+  on:
+    tags: true
+    repo: RomanosTrechlis/go-scribe
