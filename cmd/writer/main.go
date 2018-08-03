@@ -14,10 +14,10 @@ func main() {
 		fmt.Fprintf(os.Stderr, "error creating logger writer: %v", err)
 		os.Exit(1)
 	}
-	logger := log.New(l, "", log.Ldate|log.Ltime|log.Lshortfile)
+	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime|log.Lshortfile)
 	logger.Println("this is a test")
 
-	logger.Printf("this is another test because %s", "reasons")
+	l.Printf("this is another test because %s", "reasons")
 
 	lll, _ := writer.NewLogger("newWriter", "romanos", 8080, "", "", "")
 	lll.Println("new logger")

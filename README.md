@@ -1,5 +1,9 @@
 # Log Scribe
 
+[![Build Status](https://travis-ci.org/RomanosTrechlis/go-scribe.svg?branch=master)](https://travis-ci.org/RomanosTrechlis/go-scribe)
+[![Go Report Card](https://goreportcard.com/badge/github.com/RomanosTrechlis/go-scribe)](https://goreportcard.com/report/github.com/RomanosTrechlis/go-scribe)
+[![codecov](https://codecov.io/gh/RomanosTrechlis/go-scribe/branch/master/graph/badge.svg)](https://codecov.io/gh/RomanosTrechlis/go-scribe)
+
 Log Scribe consists of two project that are both based on protocol buffers and gRPC. The first is the Scribe and the second is the Mediator.
 
 ## 1. Scribe

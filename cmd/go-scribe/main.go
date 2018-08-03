@@ -12,10 +12,10 @@ import (
 
 	"github.com/RomanosTrechlis/go-icls/cli"
 	pb "github.com/RomanosTrechlis/go-scribe/api"
+	p "github.com/RomanosTrechlis/go-scribe/internal/util/format/print"
 	med "github.com/RomanosTrechlis/go-scribe/mediator"
 	"github.com/RomanosTrechlis/go-scribe/profiling"
 	"github.com/RomanosTrechlis/go-scribe/scribe"
-	p "github.com/RomanosTrechlis/go-scribe/internal/util/format/print"
 	"github.com/rs/xid"
 	"google.golang.org/grpc"
 )
@@ -85,7 +85,7 @@ func agentHandler(flags map[string]string) error {
 	id := xid.New().String()
 	p.Print(fmt.Sprintf("Scribe's id: %s", id))
 
-	// stopAll channel listens to termination and interupt signals.
+	// stopAll channel listens to termination and interrupt signals.
 	stopAll := make(chan os.Signal, 1)
 	signal.Notify(stopAll, syscall.SIGTERM, syscall.SIGINT)
 
@@ -102,18 +102,18 @@ func agentHandler(flags map[string]string) error {
 
 	// validate path passed
 	if err := scribe.CheckPath(c.StringValue("path", "agent", flags)); err != nil {
-		fmt.Fprintf(os.Stderr,"path passed is not valid: %v\n", err)
+		fmt.Fprintf(os.Stderr, "path passed is not valid: %v\n", err)
 		os.Exit(2)
 	}
 	maxSize, err := scribe.LexicalToNumber(c.StringValue("size", "agent", flags))
 	if err != nil {
-		fmt.Fprintf(os.Stderr,"couldn't parse size input to bytes: %v", err)
+		fmt.Fprintf(os.Stderr, "couldn't parse size input to bytes: %v", err)
 		os.Exit(2)
 	}
 	s, err := scribe.New(c.StringValue("path", "agent", flags), port, maxSize, c.StringValue("mediator", "agent", flags),
 		c.StringValue("crt", "agent", flags), c.StringValue("pk", "agent", flags), c.StringValue("ca", "agent", flags))
 	if err != nil {
-		fmt.Fprintf(os.Stderr,"failed to create scribe: %v", err)
+		fmt.Fprintf(os.Stderr, "failed to create scribe: %v", err)
 		os.Exit(2)
 	}
 	if err != nil {
@@ -146,7 +146,7 @@ func agentHandler(flags map[string]string) error {
 func mediatorHandler(flags map[string]string) error {
 	printLogo()
 
-	// stopAll channel listens to termination and interupt signals.
+	// stopAll channel listens to termination and interrupt signals.
 	stopAll := make(chan os.Signal, 1)
 	signal.Notify(stopAll, syscall.SIGTERM, syscall.SIGINT)
 
@@ -160,7 +160,7 @@ func mediatorHandler(flags map[string]string) error {
 	go m.Serve()
 
 	var srv *http.Server
-	pprofInfo, err := c.BoolValue("pprof", "mediator", flags)
+	pprofInfo, _ := c.BoolValue("pprof", "mediator", flags)
 	if pprofInfo {
 		srv = profiling.Serve(pport)
 		defer srv.Shutdown(nil)
@@ -260,7 +260,7 @@ func main() {
 		return
 	}
 	line := ""
-	for _, a :=  range args[1:] {
+	for _, a := range args[1:] {
 		line += a + " "
 	}
 	c.Execute(line)

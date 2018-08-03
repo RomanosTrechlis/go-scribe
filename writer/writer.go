@@ -9,10 +9,9 @@ import (
 	"log"
 	"time"
 
+	pb "github.com/RomanosTrechlis/go-scribe/api"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-
-	pb "github.com/RomanosTrechlis/go-scribe/api"
 )
 
 // RPCWriter implements Writer interface
@@ -79,7 +78,7 @@ func newRPCWriter(b builderImpl) (*RPCWriter, error) {
 	}
 
 	return &RPCWriter{
-		conn:   conn,
+		conn:     conn,
 		filename: b.filename,
 	}, nil
 }

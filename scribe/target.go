@@ -13,7 +13,7 @@ func createTarget(root string, fileSize int64) (*target, error) {
 	}
 
 	target := &target{
-		isFile: true,
+		isFile:   true,
 		rootPath: root,
 		fileSize: fileSize,
 	}
