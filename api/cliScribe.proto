@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package com.romanostrechlis.scribe.api;
+option go_package = "api";
+
+service CLIScribe {
+    rpc GetVersion(VersionRequest) returns (VersionResponse) {}
+}
+
+message VersionRequest {
+}
+
+message VersionResponse {
+    string version = 1;
+}

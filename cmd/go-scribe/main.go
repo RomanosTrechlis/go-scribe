@@ -18,6 +18,7 @@ import (
 	"github.com/RomanosTrechlis/go-scribe/scribe"
 	"github.com/rs/xid"
 	"google.golang.org/grpc"
+	"github.com/RomanosTrechlis/go-scribe/internal/util/gserver"
 )
 
 const (
@@ -53,15 +54,17 @@ passing the pprof flag and the pport to access it.
 	`
 )
 
+var version = "undefined"
+
 var c *cli.CLI
 
 func init() {
 	c = cli.New()
 	agent := c.New("agent", agentShortHelp, agentLongHelp, agentHandler)
 	agent.IntFlag("port", "", 8080, "port for server to listen to requests", false)
-	agent.BoolFlag("pprof", "", false, "additional server for pprof functionality", false)
-	agent.BoolFlag("console", "", false, "dumps log lines to console", false)
-	agent.BoolFlag("verbose", "", false, "prints regular handled request count", false)
+	agent.BoolFlag("pprof", "", "additional server for pprof functionality", false)
+	agent.BoolFlag("console", "",  "dumps log lines to console", false)
+	agent.BoolFlag("verbose", "",  "prints regular handled request count", false)
 	agent.StringFlag("mediator", "", "", "mediators address if exists, i.e 127.0.0.1:8080", false)
 	agent.IntFlag("pport", "", 1111, "port for pprof server", false)
 	agent.StringFlag("path", "", "../../logs", "path for logs to be persisted", false)
@@ -72,7 +75,7 @@ func init() {
 
 	med := c.New("mediator", mediatorShortHelp, mediatorLongHelp, mediatorHandler)
 	med.IntFlag("port", "", 8000, "port for mediator server to listen to requests", false)
-	med.BoolFlag("pprof", "", false, "additional server for pprof functionality", false)
+	med.BoolFlag("pprof", "", "additional server for pprof functionality", false)
 	med.IntFlag("pport", "", 2222, "port for pprof server", false)
 	med.StringFlag("crt", "", "", "host's certificate for secured connections", false)
 	med.StringFlag("pk", "", "", "host's private key", false)
@@ -143,6 +146,12 @@ func agentHandler(flags map[string]string) error {
 	return nil
 }
 
+type cliScribe struct {}
+
+func (c cliScribe) GetVersion(ctx context.Context, in *pb.VersionRequest) (*pb.VersionResponse, error) {
+	return &pb.VersionResponse{Version: version}, nil
+}
+
 func mediatorHandler(flags map[string]string) error {
 	printLogo()
 
@@ -165,8 +174,19 @@ func mediatorHandler(flags map[string]string) error {
 		srv = profiling.Serve(pport)
 		defer srv.Shutdown(nil)
 	}
+
+	cliServer, _ := gserver.New("", "", "")
+	go gserver.Serve(registerCLIScribe(cliServer), fmt.Sprint(":4242"), cliServer)
+
 	<-stopAll
 	return nil
+}
+
+func registerCLIScribe(srv *grpc.Server) func() {
+	return func() {
+		c := cliScribe{}
+		pb.RegisterCLIScribeServer(srv, c)
+	}
 }
 
 func addMediator(id, cmd string, flags map[string]string) error {
