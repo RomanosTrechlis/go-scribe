@@ -8,8 +8,8 @@ import (
 	pb "github.com/RomanosTrechlis/go-scribe/api"
 	p "github.com/RomanosTrechlis/go-scribe/internal/util/format/print"
 	"github.com/RomanosTrechlis/go-scribe/internal/util/gserver"
-	"github.com/RomanosTrechlis/go-scribe/service"
 	"github.com/RomanosTrechlis/go-scribe/mediator"
+	"github.com/RomanosTrechlis/go-scribe/service"
 )
 
 const (

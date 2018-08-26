@@ -14,9 +14,9 @@ func GetIPAddress() (string, error) {
 	if err != nil {
 		return os.Hostname()
 	}
-	address := addr[len(addr) - 1].String()
+	address := addr[len(addr)-1].String()
 	if len(addr) > 3 {
-		address = addr[len(addr) - 3].String()
+		address = addr[len(addr)-3].String()
 	}
 	addressArr := strings.Split(address, "/")
 	if len(addressArr) > 2 {

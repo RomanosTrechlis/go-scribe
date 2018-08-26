@@ -1,22 +1,23 @@
 package main
 
 import (
-	"github.com/RomanosTrechlis/go-scribe/scribe"
-	"github.com/RomanosTrechlis/go-scribe/mediator"
 	"context"
-	pb "github.com/RomanosTrechlis/go-scribe/api"
-	"google.golang.org/grpc"
-	p "github.com/RomanosTrechlis/go-scribe/internal/util/format/print"
-	"time"
 	"fmt"
 	"strings"
+	"time"
+
+	pb "github.com/RomanosTrechlis/go-scribe/api"
+	p "github.com/RomanosTrechlis/go-scribe/internal/util/format/print"
+	"github.com/RomanosTrechlis/go-scribe/mediator"
+	"github.com/RomanosTrechlis/go-scribe/scribe"
+	"google.golang.org/grpc"
 )
 
 type cliScribe struct {
 	// should put Mediator and Scribe behind an interface
 	isMediator bool
-	mediator *mediator.Mediator
-	scribe *scribe.LogScribe
+	mediator   *mediator.Mediator
+	scribe     *scribe.LogScribe
 }
 
 func (cl cliScribe) GetVersion(ctx context.Context, in *pb.VersionRequest) (*pb.VersionResponse, error) {
@@ -47,7 +48,7 @@ func getVersionFor(host string) (*pb.VersionResponse, error) {
 	if strings.Contains(host, ":") {
 		host = strings.Split(host, ":")[0]
 	}
-	conn, err := grpc.Dial(host + ":4242",
+	conn, err := grpc.Dial(host+":4242",
 		grpc.WithInsecure(),
 		grpc.WithTimeout(1*time.Second))
 	if err != nil {

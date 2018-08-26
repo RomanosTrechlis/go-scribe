@@ -1,19 +1,20 @@
 package main
 
 import (
-	"github.com/RomanosTrechlis/go-icls/cli"
-	pb "github.com/RomanosTrechlis/go-scribe/api"
-	"google.golang.org/grpc"
-	"time"
 	"fmt"
 	"os"
 	"strings"
+	"time"
+
+	"github.com/RomanosTrechlis/go-icls/cli"
+	pb "github.com/RomanosTrechlis/go-scribe/api"
 	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 )
 
 const (
 	shortDesc = "version command returns the version of the mediator"
-	longDesc = `version command returns the version of the mediator.
+	longDesc  = `version command returns the version of the mediator.
 
 It connects with gRPC to the mediator service and gets the version number.
 `
@@ -32,7 +33,7 @@ func main() {
 			fmt.Fprintf(os.Stderr, "failed to get flag: %v", err)
 			os.Exit(2)
 		}
-		conn, err := grpc.Dial(HOST + ":4242",
+		conn, err := grpc.Dial(HOST+":4242",
 			grpc.WithInsecure(),
 			grpc.WithTimeout(1*time.Second))
 		if err != nil {
