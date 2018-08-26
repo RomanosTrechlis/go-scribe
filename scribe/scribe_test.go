@@ -19,7 +19,7 @@ func TestNew(t *testing.T) {
 	}{
 		// {"testdata", 1235, 111111, "", "", "", "", false}, // fails when run on travis
 		{"testdata", 1234, 111111, "", "dummy", "dummy", "dummy", true},
-		{"no_dir", 1234, 111111, "", "", "", "", true},
+		{"no_dir", 1234, 111111, "", "", "", "", false},
 	}
 
 	for _, tt := range tests {
