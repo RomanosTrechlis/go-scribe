@@ -19,11 +19,11 @@ func TestNew(t *testing.T) {
 	}{
 		// {"testdata", 1235, 111111, "", "", "", "", false}, // fails when run on travis
 		{"testdata", 1234, 111111, "", "dummy", "dummy", "dummy", true},
-		{"no_dir", 1234, 111111, "", "", "", "", true},
+		{"no_dir", 1234, 111111, "", "", "", "", false},
 	}
 
 	for _, tt := range tests {
-		_, err := New(tt.path, tt.port, tt.size, tt.mediator, tt.crt, tt.pk, tt.ca)
+		_, err := New("test", tt.path, tt.port, tt.size, tt.mediator, tt.crt, tt.pk, tt.ca)
 		if err != nil && !tt.err {
 			t.Errorf("expecting no err, got error %v", err)
 		}

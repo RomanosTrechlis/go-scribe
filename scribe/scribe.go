@@ -8,6 +8,7 @@ import (
 	pb "github.com/RomanosTrechlis/go-scribe/api"
 	p "github.com/RomanosTrechlis/go-scribe/internal/util/format/print"
 	"github.com/RomanosTrechlis/go-scribe/internal/util/gserver"
+	"github.com/RomanosTrechlis/go-scribe/mediator"
 	"github.com/RomanosTrechlis/go-scribe/service"
 )
 
@@ -16,7 +17,8 @@ const (
 )
 
 // LogScribe holds the servers and other relative information
-type logScribe struct {
+type LogScribe struct {
+	id string
 	// TODO(romanos): remove remnants of db logging
 	// target struct keeps info on where to write logs
 	target
@@ -37,7 +39,7 @@ type logScribe struct {
 }
 
 // New creates a Scribe struct
-func New(root string, port int, fileSize int64, mediator, crt, key, ca string) (*logScribe, error) {
+func New(id, root string, port int, fileSize int64, mediator, crt, key, ca string) (*LogScribe, error) {
 	srv, err := gserver.New(crt, key, ca)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create grpc server: %v", err)
@@ -48,7 +50,8 @@ func New(root string, port int, fileSize int64, mediator, crt, key, ca string) (
 		return nil, err
 	}
 
-	return &logScribe{
+	return &LogScribe{
+		id:     id,
 		target: *t,
 		gRPC: gserver.GRPC{
 			Server: srv,
@@ -61,7 +64,7 @@ func New(root string, port int, fileSize int64, mediator, crt, key, ca string) (
 }
 
 // Serve initializes log Scribe's servers
-func (s *logScribe) Serve() {
+func (s *LogScribe) Serve() {
 	p.Print("Log Scribe is starting...")
 	s.stopAll = make(chan struct{})
 	s.startTime = time.Now()
@@ -76,7 +79,7 @@ func (s *logScribe) Serve() {
 }
 
 // Shutdown gracefully stops log Scribe from serving
-func (s *logScribe) Shutdown() {
+func (s *LogScribe) Shutdown() {
 	close(s.stopAll)
 	p.Print("Initializing shut down, please wait.")
 	close(s.gRPC.Stop)
@@ -85,7 +88,7 @@ func (s *logScribe) Shutdown() {
 }
 
 // Tick prints a count of requests handled.
-func (s *logScribe) Tick(interval time.Duration) {
+func (s *LogScribe) Tick(interval time.Duration) {
 	for range time.Tick(interval * time.Second) {
 		select {
 		case <-s.stopAll:
@@ -97,8 +100,16 @@ func (s *logScribe) Tick(interval time.Duration) {
 	}
 }
 
+func (s *LogScribe) GetInfo() mediator.Info {
+	return mediator.Info{
+		Scribes:        nil,
+		ScribesCounter: map[string]int64{s.id: s.counter},
+		ScribeResponsibility: nil,
+	}
+}
+
 // serviceHandler implements the protobuf service
-func (s *logScribe) serviceHandler(stop chan struct{}) {
+func (s *LogScribe) serviceHandler(stop chan struct{}) {
 	for {
 		select {
 		case req := <-s.stream:
@@ -115,7 +126,7 @@ func (s *logScribe) serviceHandler(stop chan struct{}) {
 	}
 }
 
-func (s *logScribe) register() func() {
+func (s *LogScribe) register() func() {
 	return func() {
 		log := service.Logger{Stream: s.stream}
 		pb.RegisterLogScribeServer(s.gRPC.Server, log)
@@ -127,7 +138,7 @@ func (s *logScribe) register() func() {
 	}
 }
 
-func (s *logScribe) handleIncomingRequest(r pb.LogRequest) error {
+func (s *LogScribe) handleIncomingRequest(r pb.LogRequest) error {
 	var mu sync.RWMutex
 	mu.Lock()
 	defer mu.Unlock()

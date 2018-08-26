@@ -93,8 +93,8 @@ func TestCheckPath(t *testing.T) {
 	s := os.TempDir()
 	var tc = []testCase{
 		{s, false},
-		{"noPath", true},
-		{"file.txt", true},
+		{"noPath", false},
+		{"file.txt", false},
 	}
 
 	os.Create("file.txt")

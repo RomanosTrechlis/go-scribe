@@ -43,6 +43,16 @@ type Mediator struct {
 	stopAll   chan struct{}
 }
 
+type Info struct {
+	Scribes              map[string]string
+	ScribesCounter       map[string]int64
+	ScribeResponsibility map[string]string
+}
+
+func (m *Mediator) GetInfo() Info {
+	return Info{m.scribes, m.scribesCounter, m.scribeResponsibility}
+}
+
 // New creates a new mediator
 func New(port int, crt, key, ca string) (*Mediator, error) {
 	srv, err := gserver.New(crt, key, ca)
@@ -125,7 +135,7 @@ func (m *Mediator) getConnection(s string) (*grpc.ClientConn, error) {
 }
 
 func (m *Mediator) startPingingSubcribers() {
-        for range time.Tick(5 * time.Second) {
+	for range time.Tick(5 * time.Second) {
 		m.mux.Lock()
 		m.pingSubscribers()
 		m.mux.Unlock()
