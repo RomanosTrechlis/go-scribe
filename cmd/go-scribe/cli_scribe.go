@@ -11,6 +11,9 @@ import (
 	"github.com/RomanosTrechlis/go-scribe/mediator"
 	"github.com/RomanosTrechlis/go-scribe/scribe"
 	"google.golang.org/grpc"
+	"text/tabwriter"
+	"bytes"
+	"io"
 )
 
 type cliScribe struct {
@@ -23,15 +26,18 @@ type cliScribe struct {
 func (cl cliScribe) GetVersion(ctx context.Context, in *pb.VersionRequest) (*pb.VersionResponse, error) {
 	res := version
 	if cl.isMediator && in.All {
-		res = "Type\tName\tVersion\n"
-		res += fmt.Sprintf("%s\t%s\t%s\n", "Mediator", "", version)
-		res += cl.getVersionForScribes()
+		buf := new(bytes.Buffer)
+		w := tabwriter.NewWriter(buf, 0, 0, 1, ' ', tabwriter.DiscardEmptyColumns)
+		fmt.Fprint(w, "Type\tName\tVersion\n")
+		fmt.Fprintf(w, "%s\t%s\t%s\n", "Mediator", "", version)
+		cl.getVersionForScribes(w)
+		w.Flush()
+		res = string(buf.Bytes())
 	}
 	return &pb.VersionResponse{Version: res}, nil
 }
 
-func (cl cliScribe) getVersionForScribes() string {
-	res := ""
+func (cl cliScribe) getVersionForScribes(w io.Writer) {
 	info := cl.mediator.GetInfo()
 	for k, v := range info.Scribes {
 		vr, err := getVersionFor(v)
@@ -39,9 +45,8 @@ func (cl cliScribe) getVersionForScribes() string {
 			p.Print(fmt.Sprintf("failed to get version for %s: %v\n", k, err))
 			continue
 		}
-		res += fmt.Sprintf("%s\t%s\t%s\n", "Scribe", k, vr.Version)
+		fmt.Fprintf(w, "%s\t%s\t%s\n", "Scribe", k, vr.Version)
 	}
-	return res
 }
 
 func getVersionFor(host string) (*pb.VersionResponse, error) {
