@@ -11,9 +11,7 @@ import (
 	"github.com/RomanosTrechlis/go-scribe/mediator"
 	"github.com/RomanosTrechlis/go-scribe/scribe"
 	"google.golang.org/grpc"
-	"text/tabwriter"
-	"bytes"
-	"io"
+	"errors"
 )
 
 type cliScribe struct {
@@ -24,20 +22,43 @@ type cliScribe struct {
 }
 
 func (cl cliScribe) GetVersion(ctx context.Context, in *pb.VersionRequest) (*pb.VersionResponse, error) {
-	res := version
-	if cl.isMediator && in.All {
-		buf := new(bytes.Buffer)
-		w := tabwriter.NewWriter(buf, 0, 0, 1, ' ', tabwriter.DiscardEmptyColumns)
-		fmt.Fprint(w, "Type\tName\tVersion\n")
-		fmt.Fprintf(w, "%s\t%s\t%s\n", "Mediator", "", version)
-		cl.getVersionForScribes(w)
-		w.Flush()
-		res = string(buf.Bytes())
+	if !cl.isMediator {
+		res := &pb.Version{
+			Type:    pb.Type_SCRIBE,
+			Name:    "",
+			Version: version,
+		}
+		return &pb.VersionResponse{
+			Results: []*pb.Version{res},
+		}, nil
 	}
-	return &pb.VersionResponse{Version: res}, nil
+
+	response := &pb.VersionResponse{
+		Results: make([]*pb.Version, 0),
+	}
+	if cl.isMediator {
+		res := &pb.Version{
+			Type:    pb.Type_MEDIATOR,
+			Name:    "",
+			Version: version,
+		}
+		response.Results = append(response.Results, res)
+	}
+	if in.All {
+		response = cl.getVersionForScribes(response)
+	}
+	return response, nil
 }
 
-func (cl cliScribe) getVersionForScribes(w io.Writer) {
+func (cl cliScribe) GetStats(ctx context.Context, in *pb.StatsRequest) (*pb.StatsResponse, error) {
+	return nil, errors.New("RPC not implemented yet.")
+}
+
+func (cl cliScribe) GetScribesResponsibility(ctx context.Context, in *pb.ResponsibilityRequest) (*pb.ResponsibilityResponse, error) {
+	return nil, errors.New("RPC not implemented yet.")
+}
+
+func (cl cliScribe) getVersionForScribes(resp *pb.VersionResponse) *pb.VersionResponse {
 	info := cl.mediator.GetInfo()
 	for k, v := range info.Scribes {
 		vr, err := getVersionFor(v)
@@ -45,8 +66,14 @@ func (cl cliScribe) getVersionForScribes(w io.Writer) {
 			p.Print(fmt.Sprintf("failed to get version for %s: %v\n", k, err))
 			continue
 		}
-		fmt.Fprintf(w, "%s\t%s\t%s\n", "Scribe", k, vr.Version)
+		version := &pb.Version{
+			Type: pb.Type_SCRIBE,
+			Name: k,
+			Version: vr.GetResults()[0].GetVersion(),
+		}
+		resp.Results = append(resp.Results, version)
 	}
+	return resp
 }
 
 func getVersionFor(host string) (*pb.VersionResponse, error) {

@@ -23,6 +23,29 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
+type Type int32
+
+const (
+	Type_MEDIATOR Type = 0
+	Type_SCRIBE   Type = 1
+)
+
+var Type_name = map[int32]string{
+	0: "MEDIATOR",
+	1: "SCRIBE",
+}
+var Type_value = map[string]int32{
+	"MEDIATOR": 0,
+	"SCRIBE":   1,
+}
+
+func (x Type) String() string {
+	return proto.EnumName(Type_name, int32(x))
+}
+func (Type) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_cliScribe_979a656e62883a8b, []int{0}
+}
+
 type VersionRequest struct {
 	All                  bool     `protobuf:"varint,1,opt,name=all,proto3" json:"all,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -34,7 +57,7 @@ func (m *VersionRequest) Reset()         { *m = VersionRequest{} }
 func (m *VersionRequest) String() string { return proto.CompactTextString(m) }
 func (*VersionRequest) ProtoMessage()    {}
 func (*VersionRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cliScribe_6ac6aea86dcfff2f, []int{0}
+	return fileDescriptor_cliScribe_979a656e62883a8b, []int{0}
 }
 func (m *VersionRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VersionRequest.Unmarshal(m, b)
@@ -62,17 +85,17 @@ func (m *VersionRequest) GetAll() bool {
 }
 
 type VersionResponse struct {
-	Version              string   `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+	Results              []*Version `protobuf:"bytes,1,rep,name=results,proto3" json:"results,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}   `json:"-"`
+	XXX_unrecognized     []byte     `json:"-"`
+	XXX_sizecache        int32      `json:"-"`
 }
 
 func (m *VersionResponse) Reset()         { *m = VersionResponse{} }
 func (m *VersionResponse) String() string { return proto.CompactTextString(m) }
 func (*VersionResponse) ProtoMessage()    {}
 func (*VersionResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_cliScribe_6ac6aea86dcfff2f, []int{1}
+	return fileDescriptor_cliScribe_979a656e62883a8b, []int{1}
 }
 func (m *VersionResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_VersionResponse.Unmarshal(m, b)
@@ -92,9 +115,199 @@ func (m *VersionResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_VersionResponse proto.InternalMessageInfo
 
-func (m *VersionResponse) GetVersion() string {
+func (m *VersionResponse) GetResults() []*Version {
+	if m != nil {
+		return m.Results
+	}
+	return nil
+}
+
+type Version struct {
+	Type                 Type     `protobuf:"varint,1,opt,name=type,proto3,enum=com.romanostrechlis.scribe.api.Type" json:"type,omitempty"`
+	Name                 string   `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Version              string   `protobuf:"bytes,3,opt,name=version,proto3" json:"version,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Version) Reset()         { *m = Version{} }
+func (m *Version) String() string { return proto.CompactTextString(m) }
+func (*Version) ProtoMessage()    {}
+func (*Version) Descriptor() ([]byte, []int) {
+	return fileDescriptor_cliScribe_979a656e62883a8b, []int{2}
+}
+func (m *Version) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Version.Unmarshal(m, b)
+}
+func (m *Version) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Version.Marshal(b, m, deterministic)
+}
+func (dst *Version) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Version.Merge(dst, src)
+}
+func (m *Version) XXX_Size() int {
+	return xxx_messageInfo_Version.Size(m)
+}
+func (m *Version) XXX_DiscardUnknown() {
+	xxx_messageInfo_Version.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Version proto.InternalMessageInfo
+
+func (m *Version) GetType() Type {
+	if m != nil {
+		return m.Type
+	}
+	return Type_MEDIATOR
+}
+
+func (m *Version) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *Version) GetVersion() string {
 	if m != nil {
 		return m.Version
+	}
+	return ""
+}
+
+type StatsRequest struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *StatsRequest) Reset()         { *m = StatsRequest{} }
+func (m *StatsRequest) String() string { return proto.CompactTextString(m) }
+func (*StatsRequest) ProtoMessage()    {}
+func (*StatsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_cliScribe_979a656e62883a8b, []int{3}
+}
+func (m *StatsRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_StatsRequest.Unmarshal(m, b)
+}
+func (m *StatsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_StatsRequest.Marshal(b, m, deterministic)
+}
+func (dst *StatsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_StatsRequest.Merge(dst, src)
+}
+func (m *StatsRequest) XXX_Size() int {
+	return xxx_messageInfo_StatsRequest.Size(m)
+}
+func (m *StatsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_StatsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_StatsRequest proto.InternalMessageInfo
+
+type StatsResponse struct {
+	Stats                string   `protobuf:"bytes,1,opt,name=stats,proto3" json:"stats,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *StatsResponse) Reset()         { *m = StatsResponse{} }
+func (m *StatsResponse) String() string { return proto.CompactTextString(m) }
+func (*StatsResponse) ProtoMessage()    {}
+func (*StatsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_cliScribe_979a656e62883a8b, []int{4}
+}
+func (m *StatsResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_StatsResponse.Unmarshal(m, b)
+}
+func (m *StatsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_StatsResponse.Marshal(b, m, deterministic)
+}
+func (dst *StatsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_StatsResponse.Merge(dst, src)
+}
+func (m *StatsResponse) XXX_Size() int {
+	return xxx_messageInfo_StatsResponse.Size(m)
+}
+func (m *StatsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_StatsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_StatsResponse proto.InternalMessageInfo
+
+func (m *StatsResponse) GetStats() string {
+	if m != nil {
+		return m.Stats
+	}
+	return ""
+}
+
+type ResponsibilityRequest struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ResponsibilityRequest) Reset()         { *m = ResponsibilityRequest{} }
+func (m *ResponsibilityRequest) String() string { return proto.CompactTextString(m) }
+func (*ResponsibilityRequest) ProtoMessage()    {}
+func (*ResponsibilityRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_cliScribe_979a656e62883a8b, []int{5}
+}
+func (m *ResponsibilityRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ResponsibilityRequest.Unmarshal(m, b)
+}
+func (m *ResponsibilityRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ResponsibilityRequest.Marshal(b, m, deterministic)
+}
+func (dst *ResponsibilityRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ResponsibilityRequest.Merge(dst, src)
+}
+func (m *ResponsibilityRequest) XXX_Size() int {
+	return xxx_messageInfo_ResponsibilityRequest.Size(m)
+}
+func (m *ResponsibilityRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ResponsibilityRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ResponsibilityRequest proto.InternalMessageInfo
+
+type ResponsibilityResponse struct {
+	Resp                 string   `protobuf:"bytes,1,opt,name=resp,proto3" json:"resp,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ResponsibilityResponse) Reset()         { *m = ResponsibilityResponse{} }
+func (m *ResponsibilityResponse) String() string { return proto.CompactTextString(m) }
+func (*ResponsibilityResponse) ProtoMessage()    {}
+func (*ResponsibilityResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_cliScribe_979a656e62883a8b, []int{6}
+}
+func (m *ResponsibilityResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ResponsibilityResponse.Unmarshal(m, b)
+}
+func (m *ResponsibilityResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ResponsibilityResponse.Marshal(b, m, deterministic)
+}
+func (dst *ResponsibilityResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ResponsibilityResponse.Merge(dst, src)
+}
+func (m *ResponsibilityResponse) XXX_Size() int {
+	return xxx_messageInfo_ResponsibilityResponse.Size(m)
+}
+func (m *ResponsibilityResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ResponsibilityResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ResponsibilityResponse proto.InternalMessageInfo
+
+func (m *ResponsibilityResponse) GetResp() string {
+	if m != nil {
+		return m.Resp
 	}
 	return ""
 }
@@ -102,6 +315,12 @@ func (m *VersionResponse) GetVersion() string {
 func init() {
 	proto.RegisterType((*VersionRequest)(nil), "com.romanostrechlis.scribe.api.VersionRequest")
 	proto.RegisterType((*VersionResponse)(nil), "com.romanostrechlis.scribe.api.VersionResponse")
+	proto.RegisterType((*Version)(nil), "com.romanostrechlis.scribe.api.Version")
+	proto.RegisterType((*StatsRequest)(nil), "com.romanostrechlis.scribe.api.StatsRequest")
+	proto.RegisterType((*StatsResponse)(nil), "com.romanostrechlis.scribe.api.StatsResponse")
+	proto.RegisterType((*ResponsibilityRequest)(nil), "com.romanostrechlis.scribe.api.ResponsibilityRequest")
+	proto.RegisterType((*ResponsibilityResponse)(nil), "com.romanostrechlis.scribe.api.ResponsibilityResponse")
+	proto.RegisterEnum("com.romanostrechlis.scribe.api.Type", Type_name, Type_value)
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -117,6 +336,8 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type CLIScribeClient interface {
 	GetVersion(ctx context.Context, in *VersionRequest, opts ...grpc.CallOption) (*VersionResponse, error)
+	GetStats(ctx context.Context, in *StatsRequest, opts ...grpc.CallOption) (*StatsResponse, error)
+	GetScribesResponsibility(ctx context.Context, in *ResponsibilityRequest, opts ...grpc.CallOption) (*ResponsibilityResponse, error)
 }
 
 type cLIScribeClient struct {
@@ -136,9 +357,29 @@ func (c *cLIScribeClient) GetVersion(ctx context.Context, in *VersionRequest, op
 	return out, nil
 }
 
+func (c *cLIScribeClient) GetStats(ctx context.Context, in *StatsRequest, opts ...grpc.CallOption) (*StatsResponse, error) {
+	out := new(StatsResponse)
+	err := c.cc.Invoke(ctx, "/com.romanostrechlis.scribe.api.CLIScribe/GetStats", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cLIScribeClient) GetScribesResponsibility(ctx context.Context, in *ResponsibilityRequest, opts ...grpc.CallOption) (*ResponsibilityResponse, error) {
+	out := new(ResponsibilityResponse)
+	err := c.cc.Invoke(ctx, "/com.romanostrechlis.scribe.api.CLIScribe/GetScribesResponsibility", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CLIScribeServer is the server API for CLIScribe service.
 type CLIScribeServer interface {
 	GetVersion(context.Context, *VersionRequest) (*VersionResponse, error)
+	GetStats(context.Context, *StatsRequest) (*StatsResponse, error)
+	GetScribesResponsibility(context.Context, *ResponsibilityRequest) (*ResponsibilityResponse, error)
 }
 
 func RegisterCLIScribeServer(s *grpc.Server, srv CLIScribeServer) {
@@ -163,6 +404,42 @@ func _CLIScribe_GetVersion_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CLIScribe_GetStats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StatsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CLIScribeServer).GetStats(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/com.romanostrechlis.scribe.api.CLIScribe/GetStats",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CLIScribeServer).GetStats(ctx, req.(*StatsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CLIScribe_GetScribesResponsibility_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ResponsibilityRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CLIScribeServer).GetScribesResponsibility(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/com.romanostrechlis.scribe.api.CLIScribe/GetScribesResponsibility",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CLIScribeServer).GetScribesResponsibility(ctx, req.(*ResponsibilityRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _CLIScribe_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "com.romanostrechlis.scribe.api.CLIScribe",
 	HandlerType: (*CLIScribeServer)(nil),
@@ -171,24 +448,45 @@ var _CLIScribe_serviceDesc = grpc.ServiceDesc{
 			MethodName: "GetVersion",
 			Handler:    _CLIScribe_GetVersion_Handler,
 		},
+		{
+			MethodName: "GetStats",
+			Handler:    _CLIScribe_GetStats_Handler,
+		},
+		{
+			MethodName: "GetScribesResponsibility",
+			Handler:    _CLIScribe_GetScribesResponsibility_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "cliScribe.proto",
 }
 
-func init() { proto.RegisterFile("cliScribe.proto", fileDescriptor_cliScribe_6ac6aea86dcfff2f) }
+func init() { proto.RegisterFile("cliScribe.proto", fileDescriptor_cliScribe_979a656e62883a8b) }
 
-var fileDescriptor_cliScribe_6ac6aea86dcfff2f = []byte{
-	// 175 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x4f, 0xce, 0xc9, 0x0c,
-	0x4e, 0x2e, 0xca, 0x4c, 0x4a, 0xd5, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x92, 0x4b, 0xce, 0xcf,
-	0xd5, 0x2b, 0xca, 0xcf, 0x4d, 0xcc, 0xcb, 0x2f, 0x2e, 0x29, 0x4a, 0x4d, 0xce, 0xc8, 0xc9, 0x2c,
-	0xd6, 0x2b, 0x86, 0xa8, 0x48, 0x2c, 0xc8, 0x54, 0x52, 0xe2, 0xe2, 0x0b, 0x4b, 0x2d, 0x2a, 0xce,
-	0xcc, 0xcf, 0x0b, 0x4a, 0x2d, 0x2c, 0x4d, 0x2d, 0x2e, 0x11, 0x12, 0xe0, 0x62, 0x4e, 0xcc, 0xc9,
-	0x91, 0x60, 0x54, 0x60, 0xd4, 0xe0, 0x08, 0x02, 0x31, 0x95, 0xb4, 0xb9, 0xf8, 0xe1, 0x6a, 0x8a,
-	0x0b, 0xf2, 0xf3, 0x8a, 0x53, 0x85, 0x24, 0xb8, 0xd8, 0xcb, 0x20, 0x42, 0x60, 0x85, 0x9c, 0x41,
-	0x30, 0xae, 0x51, 0x0d, 0x17, 0xa7, 0xb3, 0x8f, 0x27, 0xc4, 0x0d, 0x42, 0xf9, 0x5c, 0x5c, 0xee,
-	0xa9, 0x25, 0x50, 0xcd, 0x42, 0x7a, 0x7a, 0xf8, 0x1d, 0xa3, 0x87, 0xea, 0x12, 0x29, 0x7d, 0xa2,
-	0xd5, 0x43, 0x5c, 0xa5, 0xc4, 0xe0, 0xc4, 0x1a, 0xc5, 0x9c, 0x58, 0x90, 0x99, 0xc4, 0x06, 0xf6,
-	0xbc, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0xd7, 0x35, 0x0e, 0x24, 0x0f, 0x01, 0x00, 0x00,
+var fileDescriptor_cliScribe_979a656e62883a8b = []byte{
+	// 371 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x53, 0x4d, 0x4b, 0xc3, 0x40,
+	0x10, 0x6d, 0x9a, 0xf4, 0x6b, 0xac, 0x6d, 0x19, 0xfc, 0x08, 0x3d, 0x48, 0x58, 0x14, 0x8b, 0xd4,
+	0x08, 0x15, 0xc5, 0x6b, 0x5b, 0x4b, 0x29, 0x28, 0x42, 0x5a, 0x3c, 0x78, 0x4b, 0xc3, 0x82, 0x0b,
+	0x69, 0x36, 0xcd, 0x6e, 0x85, 0xfe, 0x06, 0x7f, 0xaf, 0x77, 0xc9, 0x66, 0x53, 0x54, 0xc4, 0xd6,
+	0xdb, 0xcc, 0xe4, 0xbd, 0x37, 0x6f, 0xdf, 0x10, 0x68, 0x06, 0x21, 0x9b, 0x06, 0x09, 0x9b, 0x53,
+	0x37, 0x4e, 0xb8, 0xe4, 0x78, 0x12, 0xf0, 0x85, 0x9b, 0xf0, 0x85, 0x1f, 0x71, 0x21, 0x13, 0x1a,
+	0xbc, 0x86, 0x4c, 0xb8, 0x22, 0x43, 0xf8, 0x31, 0x23, 0x04, 0x1a, 0xcf, 0x34, 0x11, 0x8c, 0x47,
+	0x1e, 0x5d, 0xae, 0xa8, 0x90, 0xd8, 0x02, 0xd3, 0x0f, 0x43, 0xdb, 0x70, 0x8c, 0x4e, 0xd5, 0x4b,
+	0x4b, 0x32, 0x83, 0xe6, 0x06, 0x23, 0x62, 0x1e, 0x09, 0x8a, 0x7d, 0xa8, 0x24, 0x54, 0xac, 0x42,
+	0x29, 0x6c, 0xc3, 0x31, 0x3b, 0x7b, 0xbd, 0x73, 0xf7, 0xef, 0x45, 0x6e, 0xae, 0x90, 0xf3, 0xc8,
+	0x12, 0x2a, 0x7a, 0x86, 0x77, 0x60, 0xc9, 0x75, 0x4c, 0xd5, 0xce, 0x46, 0xef, 0x74, 0x9b, 0xd4,
+	0x6c, 0x1d, 0x53, 0x4f, 0x31, 0x10, 0xc1, 0x8a, 0xfc, 0x05, 0xb5, 0x8b, 0x8e, 0xd1, 0xa9, 0x79,
+	0xaa, 0x46, 0x1b, 0x2a, 0x6f, 0x99, 0xb0, 0x6d, 0xaa, 0x71, 0xde, 0x92, 0x06, 0xd4, 0xa7, 0xd2,
+	0x97, 0x42, 0x3f, 0x95, 0x9c, 0xc1, 0xbe, 0xee, 0xf5, 0xb3, 0x0e, 0xa0, 0x24, 0xd2, 0x81, 0x72,
+	0x52, 0xf3, 0xb2, 0x86, 0x1c, 0xc3, 0xa1, 0x46, 0xb0, 0x39, 0x0b, 0x99, 0x5c, 0xe7, 0xfc, 0x2e,
+	0x1c, 0xfd, 0xfc, 0xa0, 0x85, 0x10, 0xac, 0x84, 0x8a, 0x58, 0xeb, 0xa8, 0xfa, 0xc2, 0x01, 0x2b,
+	0x75, 0x8e, 0x75, 0xa8, 0x3e, 0x8e, 0xee, 0x27, 0xfd, 0xd9, 0x93, 0xd7, 0x2a, 0x20, 0x40, 0x79,
+	0x3a, 0xf4, 0x26, 0x83, 0x51, 0xcb, 0xe8, 0x7d, 0x14, 0xa1, 0x36, 0x7c, 0x98, 0x64, 0x07, 0x44,
+	0x0e, 0x30, 0xa6, 0x32, 0xcf, 0xc8, 0xdd, 0x35, 0xe0, 0xcc, 0x5b, 0xfb, 0x6a, 0x67, 0x7c, 0x66,
+	0x99, 0x14, 0x90, 0x41, 0x75, 0x4c, 0xa5, 0x4a, 0x04, 0xbb, 0xdb, 0xe8, 0x5f, 0x83, 0x6c, 0x5f,
+	0xee, 0x88, 0xde, 0xac, 0x7a, 0x37, 0xc0, 0x4e, 0x77, 0x29, 0x84, 0xf8, 0x1e, 0x22, 0xde, 0x6c,
+	0x53, 0xfb, 0xf5, 0x1a, 0xed, 0xdb, 0xff, 0xd2, 0x72, 0x37, 0x83, 0xd2, 0x8b, 0xe9, 0xc7, 0x6c,
+	0x5e, 0x56, 0xbf, 0xcc, 0xf5, 0x67, 0x00, 0x00, 0x00, 0xff, 0xff, 0x79, 0x21, 0x30, 0xe2, 0x45,
+	0x03, 0x00, 0x00,
 }

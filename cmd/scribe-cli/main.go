@@ -10,6 +10,8 @@ import (
 	pb "github.com/RomanosTrechlis/go-scribe/api"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"bytes"
+	"text/tabwriter"
 )
 
 const (
@@ -47,7 +49,15 @@ func main() {
 			fmt.Fprintf(os.Stderr, "failed to get response from mediator service: %v", err)
 			os.Exit(2)
 		}
-		fmt.Println(res.Version)
+
+		buf := new(bytes.Buffer)
+		w := tabwriter.NewWriter(buf, 0, 0, 1, ' ', tabwriter.DiscardEmptyColumns)
+		fmt.Fprint(w, "Type\tName\tVersion\n")
+		for _, v := range res.Results {
+			fmt.Fprintf(w, "%s\t%s\t%s\n", v.Type, v.Name, v.Version)
+		}
+		w.Flush()
+		fmt.Println(string(buf.Bytes()))
 		return nil
 	})
 	version.BoolFlag("a", "all", "returns information from all the scribes", false)

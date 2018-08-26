@@ -5,6 +5,8 @@ option go_package = "api";
 
 service CLIScribe {
     rpc GetVersion(VersionRequest) returns (VersionResponse) {}
+    rpc GetStats(StatsRequest) returns (StatsResponse) {}
+    rpc GetScribesResponsibility(ResponsibilityRequest) returns (ResponsibilityResponse) {}
 }
 
 message VersionRequest {
@@ -12,5 +14,28 @@ message VersionRequest {
 }
 
 message VersionResponse {
-    string version = 1;
+    repeated Version results = 1;
+}
+
+enum Type {
+    MEDIATOR = 0;
+    SCRIBE = 1;
+}
+
+message Version {
+    Type type = 1;
+    string name = 2;
+    string version = 3;
+}
+
+message StatsRequest {}
+
+message StatsResponse {
+    string stats = 1;
+}
+
+message ResponsibilityRequest {}
+
+message ResponsibilityResponse {
+    string resp = 1;
 }
