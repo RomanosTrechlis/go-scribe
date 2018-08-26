@@ -8,3 +8,6 @@ cmd/path
 
 **/*.out
 **/*.txt
+
+cmd/go-scribe/go-scribe
+cmd/go-scribe/version.txt

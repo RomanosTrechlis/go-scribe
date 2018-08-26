@@ -14,16 +14,26 @@ import (
 
 // CheckPath checks the validity of a given path
 func CheckPath(path string) error {
-	f, err := os.Open(path)
+	err := createFolderIfNotExist(path)
 	if err != nil {
-		return fmt.Errorf("couldn't find path: %v", err)
+		return fmt.Errorf("failed to create path: %v", err)
 	}
-	info, err := f.Stat()
+	return nil
+}
+
+func createFolderIfNotExist(path string) (err error) {
+	_, err = os.Stat(path)
+	if err == nil {
+		return nil
+	}
+
+	if !os.IsNotExist(err) {
+		return fmt.Errorf("error accessing directory %s: %v", path, err)
+	}
+
+	err = os.Mkdir(path, os.ModePerm)
 	if err != nil {
-		return fmt.Errorf("couldn't get stat: %v", err)
-	}
-	if !info.IsDir() {
-		return fmt.Errorf("path is not a dir: %v", err)
+		return fmt.Errorf("error creating directory %s: %v", path, err)
 	}
 	return nil
 }

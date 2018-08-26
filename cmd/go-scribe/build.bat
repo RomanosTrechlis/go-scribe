@@ -1,2 +1,11 @@
-git describe --always --long --dirty
-go build -i -v -ldflags "-X 'main.version=2.0-0-g08e574e-dirty'"
+echo Starting compilation for windows
+@echo off
+git describe --always --long > version.txt
+set /p version= < version.txt
+go build -i -v -ldflags "-X 'main.version=%version%'"
+@echo on
+echo Starting compilation for linux
+@echo off
+set GOOS=linux
+go build -i -v -ldflags "-X 'main.version=%version%'"
+set GOOS=windows

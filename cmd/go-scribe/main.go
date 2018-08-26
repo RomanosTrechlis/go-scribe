@@ -19,6 +19,7 @@ import (
 	"github.com/rs/xid"
 	"google.golang.org/grpc"
 	"github.com/RomanosTrechlis/go-scribe/internal/util/gserver"
+	"github.com/RomanosTrechlis/go-scribe/internal/util/net"
 )
 
 const (
@@ -142,14 +143,12 @@ func agentHandler(flags map[string]string) error {
 		go s.Tick(20)
 	}
 
+	cliServer, _ := gserver.New("", "", "")
+	c := cliScribe{false, nil, s}
+	go gserver.Serve(registerCLIScribeFunc(cliServer, c), fmt.Sprint(":4242"), cliServer)
+
 	<-stopAll
 	return nil
-}
-
-type cliScribe struct {}
-
-func (c cliScribe) GetVersion(ctx context.Context, in *pb.VersionRequest) (*pb.VersionResponse, error) {
-	return &pb.VersionResponse{Version: version}, nil
 }
 
 func mediatorHandler(flags map[string]string) error {
@@ -176,17 +175,11 @@ func mediatorHandler(flags map[string]string) error {
 	}
 
 	cliServer, _ := gserver.New("", "", "")
-	go gserver.Serve(registerCLIScribe(cliServer), fmt.Sprint(":4242"), cliServer)
+	c := cliScribe{true, m, nil}
+	go gserver.Serve(registerCLIScribeFunc(cliServer, c), fmt.Sprint(":4242"), cliServer)
 
 	<-stopAll
 	return nil
-}
-
-func registerCLIScribe(srv *grpc.Server) func() {
-	return func() {
-		c := cliScribe{}
-		pb.RegisterCLIScribeServer(srv, c)
-	}
 }
 
 func addMediator(id, cmd string, flags map[string]string) error {
@@ -199,9 +192,9 @@ func addMediator(id, cmd string, flags map[string]string) error {
 	defer conn.Close()
 
 	cl := pb.NewRegisterClient(conn)
-	host, err := os.Hostname()
+	host, err := net.GetIPAddress()
 	if err != nil {
-		return fmt.Errorf("failed to get hostname from system: %v", err)
+		return fmt.Errorf("failed to get ip/hostname from system: %v", err)
 	}
 	port, _ := c.IntValue("port", cmd, flags)
 	req := &pb.RegisterRequest{

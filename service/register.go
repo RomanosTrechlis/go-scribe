@@ -3,10 +3,9 @@ package service
 import (
 	"fmt"
 
-	"golang.org/x/net/context"
-
 	pb "github.com/RomanosTrechlis/go-scribe/api"
 	p "github.com/RomanosTrechlis/go-scribe/internal/util/format/print"
+	"golang.org/x/net/context"
 )
 
 // Register holds the subscribers
