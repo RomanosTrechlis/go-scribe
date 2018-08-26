@@ -23,7 +23,7 @@ func TestNew(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		_, err := New(tt.path, tt.port, tt.size, tt.mediator, tt.crt, tt.pk, tt.ca)
+		_, err := New("test", tt.path, tt.port, tt.size, tt.mediator, tt.crt, tt.pk, tt.ca)
 		if err != nil && !tt.err {
 			t.Errorf("expecting no err, got error %v", err)
 		}
