@@ -51,11 +51,60 @@ func (cl cliScribe) GetVersion(ctx context.Context, in *pb.VersionRequest) (*pb.
 }
 
 func (cl cliScribe) GetStats(ctx context.Context, in *pb.StatsRequest) (*pb.StatsResponse, error) {
-	return nil, errors.New("RPC not implemented yet.")
+	if !cl.isMediator {
+		info := cl.scribe.GetInfo()
+		for k, v := range info.ScribesCounter {
+			return &pb.StatsResponse{
+				Result: []*pb.StatsResponse_Result{{
+					Name: k,
+					Count: v,
+				}},
+			}, nil
+		}
+		return nil, errors.New("couldn't get stats for scribe")
+	}
+
+	response := &pb.StatsResponse{
+		Result: make([]*pb.StatsResponse_Result, 0),
+	}
+	response = cl.getStatsForScribes(response)
+	return response, nil
 }
 
 func (cl cliScribe) GetScribesResponsibility(ctx context.Context, in *pb.ResponsibilityRequest) (*pb.ResponsibilityResponse, error) {
-	return nil, errors.New("RPC not implemented yet.")
+	if !cl.isMediator {
+		return nil, errors.New("rpc works for mediators only")
+	}
+
+	response := &pb.ResponsibilityResponse{
+		Result: make([]*pb.ResponsibilityResponse_Result, 0),
+	}
+	info := cl.mediator.GetInfo()
+	for k, v := range info.ScribeResponsibility {
+		stats := &pb.ResponsibilityResponse_Result{
+			Name: v,
+			Responsibility: k,
+		}
+		response.Result = append(response.Result, stats)
+	}
+	return response, nil
+}
+
+func (cl cliScribe) getStatsForScribes(resp *pb.StatsResponse) *pb.StatsResponse {
+	info := cl.mediator.GetInfo()
+	for k, v := range info.Scribes {
+		vr, err := getStatsFor(v)
+		if err != nil {
+			p.Print(fmt.Sprintf("failed to get version for %s: %v\n", k, err))
+			continue
+		}
+		result := &pb.StatsResponse_Result{
+			Name: k,
+			Count: vr.Result[0].Count,
+		}
+		resp.Result = append(resp.Result, result)
+	}
+	return resp
 }
 
 func (cl cliScribe) getVersionForScribes(resp *pb.VersionResponse) *pb.VersionResponse {
@@ -90,6 +139,22 @@ func getVersionFor(host string) (*pb.VersionResponse, error) {
 
 	client := pb.NewCLIScribeClient(conn)
 	return client.GetVersion(context.Background(), &pb.VersionRequest{})
+}
+
+func getStatsFor(host string) (*pb.StatsResponse, error) {
+	if strings.Contains(host, ":") {
+		host = strings.Split(host, ":")[0]
+	}
+	conn, err := grpc.Dial(host+":4242",
+		grpc.WithInsecure(),
+		grpc.WithTimeout(1*time.Second))
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	client := pb.NewCLIScribeClient(conn)
+	return client.GetStats(context.Background(), &pb.StatsRequest{})
 }
 
 func registerCLIScribeFunc(srv *grpc.Server, c cliScribe) func() {

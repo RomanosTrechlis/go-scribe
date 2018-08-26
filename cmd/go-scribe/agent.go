@@ -68,7 +68,7 @@ func agentHandler(flags map[string]string) error {
 		fmt.Fprintf(os.Stderr, "couldn't parse size input to bytes: %v", err)
 		os.Exit(2)
 	}
-	s, err := scribe.New(c.StringValue("path", "agent", flags), port, maxSize, c.StringValue("mediator", "agent", flags),
+	s, err := scribe.New(id, c.StringValue("path", "agent", flags), port, maxSize, c.StringValue("mediator", "agent", flags),
 		c.StringValue("crt", "agent", flags), c.StringValue("pk", "agent", flags), c.StringValue("ca", "agent", flags))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to create scribe: %v", err)

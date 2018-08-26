@@ -18,6 +18,7 @@ const (
 
 // LogScribe holds the servers and other relative information
 type LogScribe struct {
+	id string
 	// TODO(romanos): remove remnants of db logging
 	// target struct keeps info on where to write logs
 	target
@@ -38,7 +39,7 @@ type LogScribe struct {
 }
 
 // New creates a Scribe struct
-func New(root string, port int, fileSize int64, mediator, crt, key, ca string) (*LogScribe, error) {
+func New(id, root string, port int, fileSize int64, mediator, crt, key, ca string) (*LogScribe, error) {
 	srv, err := gserver.New(crt, key, ca)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create grpc server: %v", err)
@@ -50,6 +51,7 @@ func New(root string, port int, fileSize int64, mediator, crt, key, ca string) (
 	}
 
 	return &LogScribe{
+		id:     id,
 		target: *t,
 		gRPC: gserver.GRPC{
 			Server: srv,
@@ -99,7 +101,11 @@ func (s *LogScribe) Tick(interval time.Duration) {
 }
 
 func (s *LogScribe) GetInfo() mediator.Info {
-	return mediator.Info{}
+	return mediator.Info{
+		Scribes:        nil,
+		ScribesCounter: map[string]int64{s.id: s.counter},
+		ScribeResponsibility: nil,
+	}
 }
 
 // serviceHandler implements the protobuf service

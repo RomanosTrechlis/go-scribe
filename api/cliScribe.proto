@@ -31,11 +31,19 @@ message Version {
 message StatsRequest {}
 
 message StatsResponse {
-    string stats = 1;
+    message Result {
+        string name = 1;
+        int64 count = 2;
+    }
+    repeated Result result = 1;
 }
 
 message ResponsibilityRequest {}
 
 message ResponsibilityResponse {
-    string resp = 1;
+    message Result {
+        string name = 1;
+        string responsibility = 2;
+    }
+    repeated Result result = 1;
 }
