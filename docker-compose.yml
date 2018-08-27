@@ -1,0 +1,16 @@
+version: '3.7'
+services:
+  mediator:
+    image: romanos/scribe
+    ports:
+      - "8000:8000"
+      - "2222:2222"
+      - "4242:4242"
+  agent:
+    image: romanos/scribe
+    volumes:
+      - ./logs:logs
+    depends_on:
+      - "mediator"
+    deploy:
+      replicas: 2

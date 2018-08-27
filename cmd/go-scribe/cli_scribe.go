@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -11,7 +12,6 @@ import (
 	"github.com/RomanosTrechlis/go-scribe/mediator"
 	"github.com/RomanosTrechlis/go-scribe/scribe"
 	"google.golang.org/grpc"
-	"errors"
 )
 
 type cliScribe struct {
@@ -56,7 +56,7 @@ func (cl cliScribe) GetStats(ctx context.Context, in *pb.StatsRequest) (*pb.Stat
 		for k, v := range info.ScribesCounter {
 			return &pb.StatsResponse{
 				Result: []*pb.StatsResponse_Result{{
-					Name: k,
+					Name:  k,
 					Count: v,
 				}},
 			}, nil
@@ -82,7 +82,7 @@ func (cl cliScribe) GetScribesResponsibility(ctx context.Context, in *pb.Respons
 	info := cl.mediator.GetInfo()
 	for k, v := range info.ScribeResponsibility {
 		stats := &pb.ResponsibilityResponse_Result{
-			Name: v,
+			Name:           v,
 			Responsibility: k,
 		}
 		response.Result = append(response.Result, stats)
@@ -99,7 +99,7 @@ func (cl cliScribe) getStatsForScribes(resp *pb.StatsResponse) *pb.StatsResponse
 			continue
 		}
 		result := &pb.StatsResponse_Result{
-			Name: k,
+			Name:  k,
 			Count: vr.Result[0].Count,
 		}
 		resp.Result = append(resp.Result, result)
@@ -116,8 +116,8 @@ func (cl cliScribe) getVersionForScribes(resp *pb.VersionResponse) *pb.VersionRe
 			continue
 		}
 		version := &pb.Version{
-			Type: pb.Type_SCRIBE,
-			Name: k,
+			Type:    pb.Type_SCRIBE,
+			Name:    k,
 			Version: vr.GetResults()[0].GetVersion(),
 		}
 		resp.Results = append(resp.Results, version)

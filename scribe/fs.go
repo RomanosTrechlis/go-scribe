@@ -10,30 +10,14 @@ import (
 	"syscall"
 
 	"github.com/RomanosTrechlis/go-scribe/internal/util/format/time"
+	"github.com/RomanosTrechlis/go-scribe/internal/util/fs"
 )
 
 // CheckPath checks the validity of a given path
 func CheckPath(path string) error {
-	err := createFolderIfNotExist(path)
+	err := fs.CreateFolderIfNotExist(path)
 	if err != nil {
 		return fmt.Errorf("failed to create path: %v", err)
-	}
-	return nil
-}
-
-func createFolderIfNotExist(path string) (err error) {
-	_, err = os.Stat(path)
-	if err == nil {
-		return nil
-	}
-
-	if !os.IsNotExist(err) {
-		return fmt.Errorf("error accessing directory %s: %v", path, err)
-	}
-
-	err = os.Mkdir(path, os.ModePerm)
-	if err != nil {
-		return fmt.Errorf("error creating directory %s: %v", path, err)
 	}
 	return nil
 }

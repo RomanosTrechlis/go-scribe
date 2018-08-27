@@ -102,8 +102,8 @@ func (s *LogScribe) Tick(interval time.Duration) {
 
 func (s *LogScribe) GetInfo() mediator.Info {
 	return mediator.Info{
-		Scribes:        nil,
-		ScribesCounter: map[string]int64{s.id: s.counter},
+		Scribes:              nil,
+		ScribesCounter:       map[string]int64{s.id: s.counter},
 		ScribeResponsibility: nil,
 	}
 }
