@@ -10,6 +10,7 @@ import (
 	"github.com/RomanosTrechlis/go-scribe/internal/util/gserver"
 	med "github.com/RomanosTrechlis/go-scribe/mediator"
 	"github.com/RomanosTrechlis/go-scribe/profiling"
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -30,16 +31,68 @@ passing the pprof flag and the pport to access it.
 	`
 )
 
+type MediatorConfig struct {
+	Port        int  `yaml:"port"`
+	Profile     bool `yaml:"profile"`
+	ProfilePort int  `yaml:"profile_port"`
+
+	Certificate          string `yaml:"certificate"`
+	PrivateKey           string `yaml:"private_key"`
+	CertificateAuthority string `yaml:"certificate_authority"`
+}
+
+func fillMediatorConfig(flags map[string]string) (*MediatorConfig, error) {
+	file := c.StringValue("file", "mediator", flags)
+	if file != "" {
+		return fillMediatorConfigFromFile(file)
+	}
+	return fillMediatorConfigFromFlags(flags)
+}
+
+func fillMediatorConfigFromFlags(flags map[string]string) (*MediatorConfig, error) {
+	port, err := c.IntValue("port", "mediator", flags)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get the value of 'port' flag: %v", err)
+	}
+	pport, err := c.IntValue("pport", "mediator", flags)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get the value of 'pport' flag: %v", err)
+	}
+	pprofInfo, err := c.BoolValue("pprof", "mediator", flags)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get the value of 'pprof' flag: %v", err)
+	}
+	crt := c.StringValue("crt", "mediator", flags)
+	pk := c.StringValue("pk", "mediator", flags)
+	ca := c.StringValue("ca", "mediator", flags)
+	m := &MediatorConfig{port, pprofInfo, pport, crt, pk, ca}
+	return m, nil
+}
+
+func fillMediatorConfigFromFile(file string) (*MediatorConfig, error) {
+	b, err := readConfigurationFile(file)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read configuration file: %v", err)
+	}
+
+	m := new(MediatorConfig)
+	yaml.Unmarshal(b, m)
+	return m, nil
+}
+
 func mediatorHandler(flags map[string]string) error {
+	conf, err := fillMediatorConfig(flags)
+	if err != nil {
+		return err
+	}
+
 	printLogo()
 
 	// stopAll channel listens to termination and interrupt signals.
 	stopAll := make(chan os.Signal, 1)
 	signal.Notify(stopAll, syscall.SIGTERM, syscall.SIGINT)
 
-	port, _ := c.IntValue("port", "mediator", flags)
-	pport, _ := c.IntValue("pport", "mediator", flags)
-	m, err := med.New(port, c.StringValue("crt", "mediator", flags), c.StringValue("pk", "mediator", flags), c.StringValue("ca", "mediator", flags))
+	m, err := med.New(conf.Port, conf.Certificate, conf.PrivateKey, conf.CertificateAuthority)
 	if err != nil {
 		return fmt.Errorf("failed to start a new mediator: %v", err)
 	}
@@ -47,9 +100,9 @@ func mediatorHandler(flags map[string]string) error {
 	go m.Serve()
 
 	var srv *http.Server
-	pprofInfo, _ := c.BoolValue("pprof", "mediator", flags)
-	if pprofInfo {
-		srv = profiling.Serve(pport)
+
+	if conf.Profile {
+		srv = profiling.Serve(conf.ProfilePort)
 		defer srv.Shutdown(nil)
 	}
 

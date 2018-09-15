@@ -144,7 +144,7 @@ func getCreateHandler(c *cli.CLI) func(flags map[string]string) error {
 		case "cli":
 			return createCLIConfig(w)
 		case "mediator":
-			return errors.New("create mediator config is not yet implemented")
+			return createMediatorConfig(w)
 		case "scribe":
 			return errors.New("create mediator config is not yet implemented")
 		default:

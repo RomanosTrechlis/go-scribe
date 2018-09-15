@@ -26,6 +26,7 @@ func init() {
 	agent.StringFlag("ca", "", "", "certificate authority's certificate", false)
 
 	med := c.New("mediator", mediatorShortHelp, mediatorLongHelp, mediatorHandler)
+	med.StringFlag("file", "", "", "configuration file path", false)
 	med.IntFlag("port", "", 8000, "port for mediator server to listen to requests", false)
 	med.BoolFlag("pprof", "", "additional server for pprof functionality", false)
 	med.IntFlag("pport", "", 2222, "port for pprof server", false)
