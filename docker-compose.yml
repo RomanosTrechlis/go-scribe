@@ -1,15 +1,17 @@
-version: '3.7'
+version: '3.3'
 services:
   mediator:
-    image: romanos/scribe
+    build:
+      context: cmd/go-scribe/
+    image: romanos/scribe:2.0.1
     ports:
       - "8000:8000"
       - "2222:2222"
       - "4242:4242"
   agent:
-    image: romanos/scribe
+    image: romanos/scribe:2.0.1
     volumes:
-      - ./logs:logs
+      - ./logs:/logs
     depends_on:
       - "mediator"
     deploy:

@@ -6,6 +6,8 @@ go-scribe.iml
 
 cmd/path
 
+vendor/
+
 **/*.out
 **/*.txt
 
