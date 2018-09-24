@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"gopkg.in/yaml.v2"
 	"log"
 	"net/http"
 	"os"
@@ -15,6 +16,7 @@ import (
 	"github.com/RomanosTrechlis/go-scribe/internal/util/net"
 	"github.com/RomanosTrechlis/go-scribe/profiling"
 	"github.com/RomanosTrechlis/go-scribe/scribe"
+	"github.com/RomanosTrechlis/go-scribe/types"
 	"github.com/rs/xid"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -37,7 +39,68 @@ passing the pprof flag and the pport to access it.
 	`
 )
 
+func fillAgentConfig(flags map[string]string) (*types.AgentConfig, error) {
+	file := c.StringValue("file", "agent", flags)
+	if file != "" {
+		return fillAgentConfigFromFile(file)
+	}
+	return fillAgentConfigFromFlags(flags)
+}
+
+func fillAgentConfigFromFlags(flags map[string]string) (*types.AgentConfig, error) {
+	port, err := c.IntValue("port", "agent", flags)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get the value of 'port' flag: %v", err)
+	}
+	pport, err := c.IntValue("pport", "agent", flags)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get the value of 'pport' flag: %v", err)
+	}
+	pprofInfo, err := c.BoolValue("pprof", "agent", flags)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get the value of 'pprof' flag: %v", err)
+	}
+	mediator := c.StringValue("mediator", "agent", flags)
+	maxSize, err := scribe.LexicalToNumber(c.StringValue("size", "agent", flags))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get the value of 'size' flag: %v", err)
+	}
+	path := c.StringValue("path", "agent", flags)
+	verbose, err := c.BoolValue("verbose", "agent", flags)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get the value of 'verbose' flag: %v", err)
+	}
+	console, err := c.BoolValue("console", "agent", flags)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get the value of 'console' flag: %v", err)
+	}
+
+	crt := c.StringValue("crt", "agent", flags)
+	pk := c.StringValue("pk", "agent", flags)
+	ca := c.StringValue("ca", "agent", flags)
+	a := &types.AgentConfig{port, pprofInfo, console, verbose,
+	mediator, pport, path, maxSize,
+	types.CertificateConfig{crt, pk, ca}}
+	return a, nil
+}
+
+func fillAgentConfigFromFile(file string) (*types.AgentConfig, error) {
+	b, err := readConfigurationFile(file)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read configuration file: %v", err)
+	}
+
+	m := new(types.AgentConfig)
+	yaml.Unmarshal(b, m)
+	return m, nil
+}
+
 func agentHandler(flags map[string]string) error {
+	conf, err := fillAgentConfig(flags)
+	if err != nil {
+		return err
+	}
+
 	printLogoAgent()
 
 	id := xid.New().String()
@@ -48,28 +111,21 @@ func agentHandler(flags map[string]string) error {
 	signal.Notify(stopAll, syscall.SIGTERM, syscall.SIGINT)
 
 	// register to mediator
-	mediator := c.StringValue("mediator", "agent", flags)
-	if mediator != "" {
-		err := addMediator(id, "agent", flags)
+	if conf.Mediator != "" {
+		err := addMediator(id, conf)
 		if err != nil {
-			return fmt.Errorf("failed to connect to mediator %s: %v", c.StringValue("mediator", "agent", flags), err)
+			return fmt.Errorf("failed to connect to mediator %s: %v", conf.Mediator, err)
 		}
 	}
 
-	port, _ := c.IntValue("port", "agent", flags)
-
 	// validate path passed
-	if err := scribe.CheckPath(c.StringValue("path", "agent", flags)); err != nil {
+	if err := scribe.CheckPath(conf.LogPath); err != nil {
 		fmt.Fprintf(os.Stderr, "path passed is not valid: %v\n", err)
 		os.Exit(2)
 	}
-	maxSize, err := scribe.LexicalToNumber(c.StringValue("size", "agent", flags))
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "couldn't parse size input to bytes: %v", err)
-		os.Exit(2)
-	}
-	s, err := scribe.New(id, c.StringValue("path", "agent", flags), port, maxSize, c.StringValue("mediator", "agent", flags),
-		c.StringValue("crt", "agent", flags), c.StringValue("pk", "agent", flags), c.StringValue("ca", "agent", flags))
+
+	s, err := scribe.New(id, conf.LogPath, conf.Port, conf.LogFileSize, conf.Mediator,
+		conf.Certificate, conf.PrivateKey, conf.CertificateAuthority)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to create scribe: %v", err)
 		os.Exit(2)
@@ -79,21 +135,18 @@ func agentHandler(flags map[string]string) error {
 		os.Exit(2)
 	}
 
-	infoBlock("agent", flags)
+	infoBlock(conf)
 
 	defer s.Shutdown()
 	go s.Serve()
 
 	var srv *http.Server
-	pprofInfo, _ := c.BoolValue("pprof", "agent", flags)
-	pport, _ := c.IntValue("pport", "agent", flags)
-	if pprofInfo {
-		srv = profiling.Serve(pport)
+	if conf.Profile {
+		srv = profiling.Serve(conf.ProfilePort)
 		defer srv.Shutdown(nil)
 	}
 
-	verbose, _ := c.BoolValue("verbose", "agent", flags)
-	if verbose {
+	if conf.Verbose {
 		go s.Tick(20)
 	}
 
@@ -105,8 +158,8 @@ func agentHandler(flags map[string]string) error {
 	return nil
 }
 
-func addMediator(id, cmd string, flags map[string]string) error {
-	conn, err := grpc.Dial(c.StringValue("mediator", cmd, flags),
+func addMediator(id string, conf *types.AgentConfig) error {
+	conn, err := grpc.Dial(conf.Mediator,
 		grpc.WithInsecure(),
 		grpc.WithTimeout(1*time.Second))
 	if err != nil {
@@ -119,10 +172,9 @@ func addMediator(id, cmd string, flags map[string]string) error {
 	if err != nil {
 		return fmt.Errorf("failed to get ip/hostname from system: %v", err)
 	}
-	port, _ := c.IntValue("port", cmd, flags)
 	req := &pb.RegisterRequest{
 		Id:   id,
-		Addr: fmt.Sprintf("%s:%d", host, port),
+		Addr: fmt.Sprintf("%s:%d", host, conf.Port),
 	}
 	var retries = 3
 	var success = false
@@ -131,14 +183,14 @@ func addMediator(id, cmd string, flags map[string]string) error {
 		if err != nil {
 			retries--
 			p.Print(fmt.Sprintf("Failed to register to mediator '%s. "+
-				"Remaining tries: %d", c.StringValue("mediator", cmd, flags), retries))
+				"Remaining tries: %d", conf.Mediator, retries))
 			time.Sleep(1 * time.Second)
 			continue
 		}
 		if r.GetRes() != "Success" {
 			retries--
 			p.Print(fmt.Sprintf("Failed to register to mediator '%s'. "+
-				"Remaining tries: %d", c.StringValue("mediator", cmd, flags), retries))
+				"Remaining tries: %d", conf.Mediator, retries))
 			time.Sleep(2 * time.Second)
 			continue
 		}
@@ -146,27 +198,20 @@ func addMediator(id, cmd string, flags map[string]string) error {
 		break
 	}
 	if !success {
-		return fmt.Errorf("failed to register scribe to mediator '%s'\n", c.StringValue("mediator", cmd, flags))
+		return fmt.Errorf("failed to register scribe to mediator '%s'\n", conf.Mediator)
 	}
 
 	p.Print("Successfully registered to mediator")
 	return nil
 }
 
-func infoBlock(cmd string, flags map[string]string) {
-	port, _ := c.IntValue("port", cmd, flags)
-	pport, _ := c.IntValue("pport", cmd, flags)
-	pprofInfo, _ := c.BoolValue("pprof", cmd, flags)
-	rootPath := c.StringValue("path", cmd, flags)
-	size := c.StringValue("size", cmd, flags)
-
+func infoBlock(conf *types.AgentConfig) {
 	fmt.Println("##########################################################")
-	fmt.Println("\t==>\tPort number:\t", port)
-	fmt.Println("\t==>\tLog path:\t", rootPath)
-	maxSize, _ := scribe.LexicalToNumber(size)
-	fmt.Println("\t==>\tLog size:\t", maxSize)
-	fmt.Println("\t==>\tPprof server:\t", pprofInfo)
-	fmt.Println("\t==>\tPprof port:\t", pport)
+	fmt.Println("\t==>\tPort number:\t", conf.Port)
+	fmt.Println("\t==>\tLog path:\t", conf.LogPath)
+	fmt.Println("\t==>\tLog size:\t", conf.LogFileSize)
+	fmt.Println("\t==>\tPprof server:\t", conf.Profile)
+	fmt.Println("\t==>\tPprof port:\t", conf.ProfilePort)
 	fmt.Println("##########################################################")
 }
 

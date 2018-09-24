@@ -13,6 +13,7 @@ var c *cli.CLI
 func init() {
 	c = cli.New()
 	agent := c.New("agent", agentShortHelp, agentLongHelp, agentHandler)
+	agent.StringFlag("file", "", "", "configuration file path", false)
 	agent.IntFlag("port", "", 8080, "port for server to listen to requests", false)
 	agent.BoolFlag("pprof", "", "additional server for pprof functionality", false)
 	agent.BoolFlag("console", "", "dumps log lines to console", false)
@@ -34,6 +35,8 @@ func init() {
 	med.StringFlag("pk", "", "", "host's private key", false)
 	med.StringFlag("ca", "", "", "certificate authority's certificate", false)
 }
+
+
 
 func main() {
 	args := os.Args

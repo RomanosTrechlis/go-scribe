@@ -10,8 +10,11 @@ import (
 	"strings"
 
 	"github.com/RomanosTrechlis/go-scribe/internal/util/fs"
+	"github.com/RomanosTrechlis/go-scribe/types"
 	"gopkg.in/yaml.v2"
 )
+
+type MediatorConfig types.MediatorConfig
 
 type q struct {
 	order        int
@@ -30,16 +33,6 @@ func getMediatorQs() []q {
 	qs = append(qs, q{5, "private_key", "Private Key path", "", -1})
 	qs = append(qs, q{6, "certificate_authority", "Certificate Authority path", "", -1})
 	return qs
-}
-
-type MediatorConfig struct {
-	Port  int  `yaml:"port"`
-	Profile bool `yaml:"profile"`
-	ProfilePort int  `yaml:"profile_port"`
-
-	Certificate string `yaml:"certificate"`
-	PrivateKey  string `yaml:"private_key"`
-	CertificateAuthority  string `yaml:"certificate_authority"`
 }
 
 func (mc *MediatorConfig) addValueToMediatorConfig(field, val string) error {
@@ -92,7 +85,10 @@ func createMediatorConfig(write bool) error {
 		if val == "" {
 			val = question.defaultValue
 		}
-		mc.addValueToMediatorConfig(question.name, val)
+		err := mc.addValueToMediatorConfig(question.name, val)
+		if err != nil {
+			return err;
+		}
 	}
 
 	b, err := yaml.Marshal(mc)

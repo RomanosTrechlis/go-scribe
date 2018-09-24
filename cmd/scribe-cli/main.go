@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -41,14 +40,14 @@ various configuration files.
 )
 
 const (
-	LOCALHOST = "localhost"
+	LOCALHOST  = "localhost"
 	HELP_SHORT = "-h"
-	HELP_LONG = "--help"
+	HELP_LONG  = "--help"
 
-	SCRIBE_DIR = ".scribe"
-	CLI_CONFIG = "cli_config.yml"
+	SCRIBE_DIR      = ".scribe"
+	CLI_CONFIG      = "cli_config.yml"
 	MEDIATOR_CONFIG = "mediator_config.yml"
-	SCRIBE_CONFIG = "scribe_config.yml"
+	SCRIBE_CONFIG   = "scribe_config.yml"
 
 	THE_ANSWER_TO_EVERYTHING = 4242
 )
@@ -146,7 +145,7 @@ func getCreateHandler(c *cli.CLI) func(flags map[string]string) error {
 		case "mediator":
 			return createMediatorConfig(w)
 		case "scribe":
-			return errors.New("create mediator config is not yet implemented")
+			return createAgentConfig(w)
 		default:
 			return fmt.Errorf("%s is not supported", t)
 		}

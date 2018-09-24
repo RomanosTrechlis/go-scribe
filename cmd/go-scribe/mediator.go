@@ -10,6 +10,7 @@ import (
 	"github.com/RomanosTrechlis/go-scribe/internal/util/gserver"
 	med "github.com/RomanosTrechlis/go-scribe/mediator"
 	"github.com/RomanosTrechlis/go-scribe/profiling"
+	"github.com/RomanosTrechlis/go-scribe/types"
 	"gopkg.in/yaml.v2"
 )
 
@@ -31,17 +32,7 @@ passing the pprof flag and the pport to access it.
 	`
 )
 
-type MediatorConfig struct {
-	Port        int  `yaml:"port"`
-	Profile     bool `yaml:"profile"`
-	ProfilePort int  `yaml:"profile_port"`
-
-	Certificate          string `yaml:"certificate"`
-	PrivateKey           string `yaml:"private_key"`
-	CertificateAuthority string `yaml:"certificate_authority"`
-}
-
-func fillMediatorConfig(flags map[string]string) (*MediatorConfig, error) {
+func fillMediatorConfig(flags map[string]string) (*types.MediatorConfig, error) {
 	file := c.StringValue("file", "mediator", flags)
 	if file != "" {
 		return fillMediatorConfigFromFile(file)
@@ -49,7 +40,7 @@ func fillMediatorConfig(flags map[string]string) (*MediatorConfig, error) {
 	return fillMediatorConfigFromFlags(flags)
 }
 
-func fillMediatorConfigFromFlags(flags map[string]string) (*MediatorConfig, error) {
+func fillMediatorConfigFromFlags(flags map[string]string) (*types.MediatorConfig, error) {
 	port, err := c.IntValue("port", "mediator", flags)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get the value of 'port' flag: %v", err)
@@ -65,17 +56,18 @@ func fillMediatorConfigFromFlags(flags map[string]string) (*MediatorConfig, erro
 	crt := c.StringValue("crt", "mediator", flags)
 	pk := c.StringValue("pk", "mediator", flags)
 	ca := c.StringValue("ca", "mediator", flags)
-	m := &MediatorConfig{port, pprofInfo, pport, crt, pk, ca}
+	m := &types.MediatorConfig{port, pprofInfo, pport,
+		types.CertificateConfig{crt, pk, ca}}
 	return m, nil
 }
 
-func fillMediatorConfigFromFile(file string) (*MediatorConfig, error) {
+func fillMediatorConfigFromFile(file string) (*types.MediatorConfig, error) {
 	b, err := readConfigurationFile(file)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read configuration file: %v", err)
 	}
 
-	m := new(MediatorConfig)
+	m := new(types.MediatorConfig)
 	yaml.Unmarshal(b, m)
 	return m, nil
 }
